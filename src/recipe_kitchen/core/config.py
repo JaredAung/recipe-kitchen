@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     supabase_secret_key: str = ""
     supabase_jwks_url: str = ""
     supabase_api_key: str = ""
+    supabase_storage_bucket: str = ""
 
     @property
     def secret_key(self) -> str:
