@@ -24,3 +24,35 @@ recipe-kitchen = "recipe_kitchen:main"
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.39.10",
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "ruff>=0.16.5",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-q"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+src = ["src", "tests"]
+extend-exclude = ["benchmark"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "W", "B"]
+ignore = [
+    "B008",  # FastAPI File()/Depends() defaults
+    "UP012",  # `.encode("utf-8")` is explicit and fine
+]
+
+[tool.basedpyright]
+pythonVersion = "3.14"
+typeCheckingMode = "basic"
+include = ["src", "tests"]
+exclude = ["benchmark"]
+reportMissingTypeStubs = false

@@ -48,11 +48,7 @@ def add_recipe(
     Uses the admin client unless `client` is passed. Deletes the recipe if
     child-row inserts fail.
     """
-    data = (
-        recipe
-        if isinstance(recipe, RecipeCreate)
-        else RecipeCreate.model_validate(recipe)
-    )
+    data = recipe if isinstance(recipe, RecipeCreate) else RecipeCreate.model_validate(recipe)
     db = client or get_supabase_admin()
 
     recipe_payload = data.model_dump(

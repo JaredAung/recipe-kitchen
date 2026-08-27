@@ -55,9 +55,7 @@ def _to_jpeg(data: bytes) -> bytes:
         image.load()
     except UnidentifiedImageError as exc:
         raise RuntimeError("Thumbnail is not a valid image.") from exc
-    if image.mode in {"RGBA", "LA"} or (
-        image.mode == "P" and "transparency" in image.info
-    ):
+    if image.mode in {"RGBA", "LA"} or (image.mode == "P" and "transparency" in image.info):
         rgba = image.convert("RGBA")
         background = Image.new("RGB", rgba.size, (255, 255, 255))
         background.paste(rgba, mask=rgba.getchannel("A"))
@@ -109,9 +107,7 @@ def delete_thumbnail(object_path: str) -> None:
 def main() -> None:
     """Upload the test1 Facebook CDN thumbnail, then delete it."""
     if not TEST1_THUMBNAIL_URL:
-        raise RuntimeError(
-            "Set TEST1_THUMBNAIL_URL to a current Facebook thumbnail CDN link"
-        )
+        raise RuntimeError("Set TEST1_THUMBNAIL_URL to a current Facebook thumbnail CDN link")
     stored = download_thumbnail(TEST1_THUMBNAIL_URL, "test1/thumbnail.jpg")
     try:
         print(stored.model_dump_json(indent=2))

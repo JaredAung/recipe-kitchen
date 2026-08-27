@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-test:
+    name: Lint, typecheck, and test
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: https://example.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: test-publishable-key
+      SUPABASE_SECRET_KEY: test-secret-key
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --frozen --all-groups
+      - name: Ruff
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Type check
+        run: uv run basedpyright
+      - name: Tests
+        run: uv run pytest
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # License secret is only required for GitHub Organizations.
+      - uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}

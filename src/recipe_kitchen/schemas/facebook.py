@@ -48,9 +48,7 @@ def parse_facebook_video_url(url: str) -> str:
             raise ValueError("fb.watch URL is missing the video id")
         return url.strip()
     if not any(pattern.search(path) for pattern in _VIDEO_PATHS):
-        raise ValueError(
-            "URL must be a Facebook reel, watch, share, or video link"
-        )
+        raise ValueError("URL must be a Facebook reel, watch, share, or video link")
     return url.strip()
 
 

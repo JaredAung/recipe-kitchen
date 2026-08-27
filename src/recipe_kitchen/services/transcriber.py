@@ -49,9 +49,7 @@ def _multipart_body(
     for name, value in fields.items():
         parts.append(
             (
-                f"--{boundary}\r\n"
-                f'Content-Disposition: form-data; name="{name}"\r\n\r\n'
-                f"{value}\r\n"
+                f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'
             ).encode("utf-8")
         )
     parts.append(
@@ -163,8 +161,8 @@ def transcribe_burmese(video_path: str | Path, *, api_key: str | None = None) ->
 
 
 def main() -> None:
-    """Transcribe the sample video at tests/test1.mp4 and print the result."""
-    video_path = ROOT / "tests" / "test1.mp4"
+    """Transcribe the sample video at testing-material/test1.mp4 and print the result."""
+    video_path = ROOT / "testing-material" / "test1.mp4"
     print(f"Transcribing {video_path}...")
     transcript = transcribe_burmese(video_path)
     print("\n--- transcript ---")

@@ -12,7 +12,7 @@ from pathlib import Path
 SAMPLE_RATE = 16000
 SYNC_LIMIT_SECONDS = 55
 BYTES_PER_SECOND = SAMPLE_RATE * 2  # 16-bit mono PCM
-VIDEO_PATH = Path(__file__).resolve().parents[2] / "tests" / "test1.mp4"
+VIDEO_PATH = Path(__file__).resolve().parents[2] / "testing-material" / "test1.mp4"
 
 
 def load_env(path: Path) -> None:

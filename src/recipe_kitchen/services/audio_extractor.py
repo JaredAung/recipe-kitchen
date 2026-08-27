@@ -40,9 +40,7 @@ def extract_pcm(video_path: str | Path, ffmpeg: str | None = None) -> bytes:
         capture_output=True,
     )
     if result.returncode != 0:
-        raise RuntimeError(
-            f"ffmpeg failed for {path.name}:\n{result.stderr.decode().strip()}"
-        )
+        raise RuntimeError(f"ffmpeg failed for {path.name}:\n{result.stderr.decode().strip()}")
     return result.stdout
 
 

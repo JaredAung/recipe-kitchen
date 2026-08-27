@@ -10,9 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 MODEL = "gemini-3.5-flash-lite"
-GENERATE_URL = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
-)
+GENERATE_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 PROMPT = (
     "Translate this Burmese recipe transcript into English.\n"
     "Keep every [MM:SS] timestamp on its own line.\n"
@@ -37,8 +35,7 @@ def is_burmese(text: str, *, threshold: float = 0.3) -> bool:
     if not letters:
         return False
     myanmar = sum(
-        any(start <= ord(char) <= end for start, end in MYANMAR_RANGES)
-        for char in letters
+        any(start <= ord(char) <= end for start, end in MYANMAR_RANGES) for char in letters
     )
     return myanmar / len(letters) > threshold
 
@@ -106,11 +103,7 @@ def translate_to_english(transcript: str, *, api_key: str | None = None) -> str:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"Gemini HTTP {exc.code}: {detail}") from exc
 
-    parts = (
-        body.get("candidates", [{}])[0]
-        .get("content", {})
-        .get("parts", [])
-    )
+    parts = body.get("candidates", [{}])[0].get("content", {}).get("parts", [])
     translated = "".join(part.get("text", "") for part in parts).strip()
     if not translated:
         raise RuntimeError(f"Gemini returned no text: {body}")
