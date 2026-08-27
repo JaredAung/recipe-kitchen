@@ -1,0 +1,46 @@
+$kind: http-request
+name: Ingest Facebook Video
+method: POST
+url: '{{baseUrl}}/ingest'
+order: 4000
+description: |-
+  Validate a Facebook video URL, scrape the page, and upload the video (and optional thumbnail) to storage.
+
+  **Request body** (JSON):
+  | Field | Type   | Required | Description                        |
+  |-------|--------|----------|------------------------------------|
+  | url   | string | ✅       | A valid Facebook video URL         |
+
+  The URL must point to a Facebook video (e.g. `https://www.facebook.com/watch?v=<id>` or `https://www.facebook.com/<page>/videos/<id>`). Non-Facebook or non-video URLs are rejected with `422`.
+
+  **Successful response (200)**:
+  ```json
+  {
+    "media": {
+      "video_id": "123456789",
+      "hd_url": "https://...",
+      "sd_url": "https://...",
+      "thumbnail_url": "https://..."
+    },
+    "video": "<video_id>/video.mp4",
+    "thumbnail": "<video_id>/thumbnail.jpg",
+    "subtitle_text": ""
+  }
+  ```
+
+  **Error responses**:
+  | Status | Reason                                              |
+  |--------|-----------------------------------------------------|
+  | 422    | URL is not a valid Facebook video URL, or no video found at the URL |
+  | 502    | Upstream scrape or storage upload failed            |
+auth:
+  type: noauth
+body:
+  type: json
+  content: |-
+    {
+      "url": "https://www.facebook.com/watch?v=YOUR_VIDEO_ID"
+    }
+headers:
+  - key: Content-Type
+    value: application/json
