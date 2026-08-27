@@ -36,4 +36,4 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     """Return cached app settings loaded from the environment and `.env`."""
-    return Settings()
+    return Settings()  # pyright: ignore[reportCallIssue]

@@ -10,5 +10,5 @@ body:
   content:
     - key: file
       type: file
-      src: '/Users/yemarnaung/Documents/Projects/recipe-kitchen/tests/test1.mp4'
+      src: '/Users/yemarnaung/Documents/Projects/recipe-kitchen/testing-material/test1.mp4'
       description: 'Recipe video file with Burmese narration (.mp4, .mov, .mkv, .webm, .avi, .m4v)'

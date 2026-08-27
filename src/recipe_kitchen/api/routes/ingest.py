@@ -93,14 +93,14 @@ def ingest_facebook(body: IngestRequest) -> IngestResponse:
                 media.thumbnail_url,
                 f"{prefix}/thumbnail.jpg",
             ).path
-        except (RuntimeError, OSError):
+        except RuntimeError, OSError:
             thumbnail = ""
 
     subtitle_text = ""
     if media.subtitles_url:
         try:
             subtitle_text = download_subtitle_text(media.subtitles_url)
-        except (RuntimeError, OSError):
+        except RuntimeError, OSError:
             subtitle_text = ""
 
     return IngestResponse(

@@ -6,7 +6,7 @@ Select an OCR engine for extracting on-screen text (titles, ingredient overlays,
 
 ## Preliminary finding: Burmese video overlays
 
-Burmese recipe videos (`tests/test1.mp4`, `tests/test2.mp4`) were tried first. Overlay OCR failed: the readable on-screen text is almost always subtitles that restated the narration, so the signal duplicated speech-to-text rather than adding ingredients or steps.
+Burmese recipe videos (`testing-material/test1.mp4`, `testing-material/test2.mp4`) were tried first. Overlay OCR failed: the readable on-screen text is almost always subtitles that restated the narration, so the signal duplicated speech-to-text rather than adding ingredients or steps.
 
 **Scope for this experiment:** English on-screen text only, until a Burmese video is found where overlays carry information that is not in the audio.
 

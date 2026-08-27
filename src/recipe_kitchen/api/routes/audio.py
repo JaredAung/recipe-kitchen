@@ -43,8 +43,11 @@ def run_audio_pipeline(
     else:
         transcript_my = None
         transcript_en = transcript
-    ingredients = collect_ingredients(transcript_en, source="audio")
-    steps = collect_steps(transcript_en, source="audio")
+    ingredients = [
+        Ingredient.model_validate(item)
+        for item in collect_ingredients(transcript_en, source="audio")
+    ]
+    steps = [Step.model_validate(item) for item in collect_steps(transcript_en, source="audio")]
     saved = add_recipe(
         RecipeCreate(
             transcript_my=transcript_my,

@@ -11,9 +11,7 @@ from typing import Literal, TypedDict
 
 ROOT = Path(__file__).resolve().parents[3]
 MODEL = "gemini-3.5-flash-lite"
-GENERATE_URL = (
-    f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
-)
+GENERATE_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent"
 
 IngredientSource = Literal["audio", "caption", "visual"]
 SOURCES: tuple[IngredientSource, ...] = ("audio", "caption", "visual")
@@ -142,11 +140,7 @@ def collect_ingredients(
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"Gemini HTTP {exc.code}: {detail}") from exc
 
-    parts = (
-        body.get("candidates", [{}])[0]
-        .get("content", {})
-        .get("parts", [])
-    )
+    parts = body.get("candidates", [{}])[0].get("content", {}).get("parts", [])
     raw = "".join(part.get("text", "") for part in parts).strip()
     if not raw:
         raise RuntimeError(f"Gemini returned no text: {body}")

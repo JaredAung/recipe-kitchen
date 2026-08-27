@@ -5,9 +5,7 @@ from __future__ import annotations
 import re
 import urllib.request
 
-_TIMESTAMP = re.compile(
-    r"^\d{1,2}:\d{2}:\d{2}[.,]\d{1,3}\s*-->\s*\d{1,2}:\d{2}:\d{2}[.,]\d{1,3}"
-)
+_TIMESTAMP = re.compile(r"^\d{1,2}:\d{2}:\d{2}[.,]\d{1,3}\s*-->\s*\d{1,2}:\d{2}:\d{2}[.,]\d{1,3}")
 _INDEX = re.compile(r"^\d+$")
 _TAG = re.compile(r"<[^>]+>")
 

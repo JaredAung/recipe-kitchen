@@ -59,9 +59,7 @@ def fetch_facebook(
     if not run:
         raise RuntimeError("Apify actor run failed.")
 
-    dataset_id = (
-        run["defaultDatasetId"] if isinstance(run, dict) else run.default_dataset_id
-    )
+    dataset_id = run["defaultDatasetId"] if isinstance(run, dict) else run.default_dataset_id
     items = list(client.dataset(dataset_id).iterate_items())
     if not items:
         raise RuntimeError("Actor returned no posts.")

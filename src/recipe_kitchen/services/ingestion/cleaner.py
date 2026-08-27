@@ -42,18 +42,20 @@ def extract_facebook_media(data: dict | list[dict]) -> FacebookMedia:
     item = _item(data)
     video = "short_form_video_context.playback_video"
     delivery = f"{video}.videoDeliveryLegacyFields"
-    return FacebookMedia(
-        video_id=_at(item, "facebookId"),
-        source_url=_at(item, "facebookUrl"),
-        caption=_at(item, "message.text"),
-        hd_url=_at(item, f"{delivery}.browser_native_hd_url"),
-        sd_url=_at(item, f"{delivery}.browser_native_sd_url"),
-        thumbnail_url=_at(item, f"{video}.thumbnailImage.uri"),
-        duration=_at(item, f"{video}.length_in_second"),
-        width=_at(item, f"{video}.width"),
-        height=_at(item, f"{video}.height"),
-        subtitles_url=_at(item, f"{video}.captions_url"),
-        audio_available=_at(item, f"{video}.audio_availability"),
-        creator_name=_at(item, "short_form_video_context.video_owner.name"),
-        audio_title=_at(item, "short_form_video_context.track_title"),
+    return FacebookMedia.model_validate(
+        {
+            "video_id": _at(item, "facebookId"),
+            "source_url": _at(item, "facebookUrl"),
+            "caption": _at(item, "message.text"),
+            "hd_url": _at(item, f"{delivery}.browser_native_hd_url"),
+            "sd_url": _at(item, f"{delivery}.browser_native_sd_url"),
+            "thumbnail_url": _at(item, f"{video}.thumbnailImage.uri"),
+            "duration": _at(item, f"{video}.length_in_second"),
+            "width": _at(item, f"{video}.width"),
+            "height": _at(item, f"{video}.height"),
+            "subtitles_url": _at(item, f"{video}.captions_url"),
+            "audio_available": _at(item, f"{video}.audio_availability"),
+            "creator_name": _at(item, "short_form_video_context.video_owner.name"),
+            "audio_title": _at(item, "short_form_video_context.track_title"),
+        }
     )
