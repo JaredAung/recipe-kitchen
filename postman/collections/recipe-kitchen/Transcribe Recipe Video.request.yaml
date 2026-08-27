@@ -1,0 +1,14 @@
+$kind: http-request
+name: Transcribe Recipe Video
+method: POST
+url: '{{baseUrl}}/audio'
+order: 3000
+auth:
+  type: noauth
+body:
+  type: formdata
+  content:
+    - key: file
+      type: file
+      src: '/Users/yemarnaung/Documents/Projects/recipe-kitchen/tests/test1.mp4'
+      description: 'Recipe video file with Burmese narration (.mp4, .mov, .mkv, .webm, .avi, .m4v)'
