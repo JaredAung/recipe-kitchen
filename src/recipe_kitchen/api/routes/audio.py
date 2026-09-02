@@ -10,11 +10,7 @@ from pydantic import BaseModel, ValidationError
 
 from recipe_kitchen.db.add_recipe import add_recipe
 from recipe_kitchen.schemas.recipe import Ingredient, RecipeCreate, Step
-from recipe_kitchen.services.audio_extractor import extract_pcm, pcm_to_wav
-from recipe_kitchen.services.ingredient_collector import collect_ingredients
-from recipe_kitchen.services.steps_collector import collect_steps
-from recipe_kitchen.services.transcriber import transcribe_wav
-from recipe_kitchen.services.translater import is_burmese, translate_to_english
+from recipe_kitchen.services.audio_pipeline import extract_audio_channel
 
 router = APIRouter(prefix="/audio", tags=["audio"])
 
@@ -35,34 +31,22 @@ def run_audio_pipeline(
     original_filename: str | None = None,
 ) -> AudioPipelineResponse:
     """Transcribe, translate if Burmese, extract ingredients/steps, and save the recipe."""
-    pcm = extract_pcm(video_path)
-    transcript = transcribe_wav(pcm_to_wav(pcm))
-    if is_burmese(transcript):
-        transcript_my = transcript
-        transcript_en = translate_to_english(transcript)
-    else:
-        transcript_my = None
-        transcript_en = transcript
-    ingredients = [
-        Ingredient.model_validate(item)
-        for item in collect_ingredients(transcript_en, source="audio")
-    ]
-    steps = [Step.model_validate(item) for item in collect_steps(transcript_en, source="audio")]
+    extracted = extract_audio_channel(video_path)
     saved = add_recipe(
         RecipeCreate(
-            transcript_my=transcript_my,
-            transcript_en=transcript_en,
-            ingredients=ingredients,
-            steps=steps,
+            transcript_my=extracted.transcript_my,
+            transcript_en=extracted.transcript_en,
+            ingredients=extracted.ingredients,
+            steps=extracted.steps,
             original_filename=original_filename,
         )
     )
     return AudioPipelineResponse(
         id=saved["id"],
-        transcript_my=transcript_my,
-        transcript_en=transcript_en,
-        ingredients=ingredients,
-        steps=steps,
+        transcript_my=extracted.transcript_my,
+        transcript_en=extracted.transcript_en,
+        ingredients=extracted.ingredients,
+        steps=extracted.steps,
     )
 
 
