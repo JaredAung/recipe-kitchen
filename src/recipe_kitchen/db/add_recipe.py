@@ -27,8 +27,6 @@ def _channel_status(recipe: RecipeCreate) -> dict[str, str]:
     """Mark audio/caption/visual as ready when that channel contributed data."""
     status = {source: "idle" for source in SOURCES}
     found: set[str] = set()
-    if recipe.transcript_my or recipe.transcript_en:
-        found.add("audio")
     if recipe.caption_text:
         found.add("caption")
     for item in (*recipe.ingredients, *recipe.steps):

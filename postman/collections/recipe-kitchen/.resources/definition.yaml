@@ -1,6 +1,6 @@
 $kind: collection
 name: recipe-kitchen
-description: 'API collection for the recipe-kitchen FastAPI service. Handles health checks, user identity, and Burmese recipe video transcription/translation.'
+description: 'API collection for the recipe-kitchen FastAPI service. Handles health checks, user identity, Facebook ingest, audio transcription, and visual recipe extraction.'
 variables:
   - key: baseUrl
     value: 'http://localhost:8000'

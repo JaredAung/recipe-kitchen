@@ -3,6 +3,7 @@ from recipe_kitchen.schemas.recipe import (
     Ingredient,
     RecipeCreate,
     Step,
+    VisualExtract,
 )
 
 __all__ = [
@@ -10,5 +11,6 @@ __all__ = [
     "Ingredient",
     "RecipeCreate",
     "Step",
+    "VisualExtract",
     "parse_facebook_video_url",
 ]

@@ -2,39 +2,14 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 from apify_client import ApifyClient
 
+from recipe_kitchen.utils import load_env, require_api_key
+
 ROOT = Path(__file__).resolve().parents[4]
 ACTOR_ID = "apify/facebook-posts-scraper"
-
-
-def _load_env(path: Path) -> None:
-    """Load KEY=VALUE lines from `path` into os.environ if the file exists.
-
-    Existing environment variables are not overwritten.
-    """
-    if not path.is_file():
-        return
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
-
-
-def _require_token(api_token: str | None) -> str:
-    """Return `api_token` or APIFY_API_TOKEN from the environment.
-
-    Raises RuntimeError if neither is set.
-    """
-    token = (api_token or os.environ.get("APIFY_API_TOKEN") or "").strip()
-    if not token:
-        raise RuntimeError("APIFY_API_TOKEN is missing. Set it in .env")
-    return token
 
 
 def fetch_facebook(
@@ -47,8 +22,8 @@ def fetch_facebook(
     Raises RuntimeError when the token is missing, the actor fails, or
     the dataset is empty.
     """
-    _load_env(ROOT / ".env")
-    client = ApifyClient(_require_token(api_token))
+    load_env(ROOT / ".env")
+    client = ApifyClient(require_api_key(api_token, name="APIFY_API_TOKEN"))
     run = client.actor(ACTOR_ID).call(
         run_input={
             "startUrls": [{"url": facebook_url}],
