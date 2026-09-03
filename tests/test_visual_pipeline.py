@@ -1,8 +1,8 @@
 from unittest.mock import MagicMock, patch
 
 from recipe_kitchen.services.visual_pipeline import (
-    _GeminiVisual,
     _clamp_confidence,
+    _GeminiVisual,
     _to_ingredients,
     extract_visual_channel,
 )

@@ -11,8 +11,16 @@ BOURBON_CAPTION = (
 MARKETING_CAPTIONS = (
     "👉Spicy fried fish that will make even relatives forget👍😋",
     "👉 Delicious red pork cooked with sweet and fluffy 👍😋",
-    "I'm here to share with you a Chinese style Stir-Fried Minced Meat recipe that the whole house loves. 🥰",
-    "Crispy Potato Slices Quick process of making Potato Slices 😋 Simple visuals, satisfying result. Pure Kitchen ASMR, Original Cooking Visuals, Satisfying Food Journey, Relaxing Snack Prep, Global Recipe Discovery",
+    (
+        "I'm here to share with you a Chinese style Stir-Fried Minced Meat "
+        "recipe that the whole house loves. 🥰"
+    ),
+    (
+        "Crispy Potato Slices Quick process of making Potato Slices 😋 "
+        "Simple visuals, satisfying result. Pure Kitchen ASMR, Original "
+        "Cooking Visuals, Satisfying Food Journey, Relaxing Snack Prep, "
+        "Global Recipe Discovery"
+    ),
     "Maggi Omlette 🥪",
 )
 
