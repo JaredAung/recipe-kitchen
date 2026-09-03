@@ -54,6 +54,8 @@ ignore = [
 [tool.basedpyright]
 pythonVersion = "3.14"
 typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
 include = ["src", "tests"]
 exclude = ["benchmark"]
 reportMissingTypeStubs = false

@@ -7,7 +7,7 @@ from io import BytesIO
 
 from PIL import Image, UnidentifiedImageError
 from pydantic import BaseModel, Field
-from supabase import StorageException
+from storage3.utils import StorageException
 
 from recipe_kitchen.core.config import get_settings
 from recipe_kitchen.db.supabase import get_supabase_admin
