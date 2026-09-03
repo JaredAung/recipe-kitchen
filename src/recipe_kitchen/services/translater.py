@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-import os
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+from recipe_kitchen.utils import load_env, require_api_key
 
 ROOT = Path(__file__).resolve().parents[3]
 MODEL = "gemini-3.5-flash-lite"
@@ -40,32 +41,6 @@ def is_burmese(text: str, *, threshold: float = 0.3) -> bool:
     return myanmar / len(letters) > threshold
 
 
-def _load_env(path: Path) -> None:
-    """Load KEY=VALUE lines from `path` into os.environ if the file exists.
-
-    Existing environment variables are not overwritten.
-    """
-    if not path.is_file():
-        return
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
-
-
-def _require_api_key(api_key: str | None) -> str:
-    """Return `api_key` or GEMINI_API_KEY from the environment.
-
-    Raises RuntimeError if neither is set.
-    """
-    key = (api_key or os.environ.get("GEMINI_API_KEY") or "").strip()
-    if not key:
-        raise RuntimeError("GEMINI_API_KEY is missing. Set it in .env")
-    return key
-
-
 def translate_to_english(transcript: str, *, api_key: str | None = None) -> str:
     """Translate a timestamped Burmese transcript into English with Gemini.
 
@@ -74,7 +49,7 @@ def translate_to_english(transcript: str, *, api_key: str | None = None) -> str:
     the Gemini request fails or returns no text.
     """
 
-    _load_env(ROOT / ".env")
+    load_env(ROOT / ".env")
     text = transcript.strip()
     if not text:
         raise ValueError("Transcript is empty.")
@@ -92,7 +67,7 @@ def translate_to_english(transcript: str, *, api_key: str | None = None) -> str:
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
-            "x-goog-api-key": _require_api_key(api_key),
+            "x-goog-api-key": require_api_key(api_key),
         },
         method="POST",
     )

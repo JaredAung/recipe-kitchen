@@ -9,32 +9,13 @@ import urllib.request
 from pathlib import Path
 
 from recipe_kitchen.services.audio_extractor import extract_pcm, pcm_to_wav
+from recipe_kitchen.utils import load_env, require_api_key
 
 ROOT = Path(__file__).resolve().parents[3]
 LANGUAGE_CODE = "mya"
 PAUSE_SECONDS = 0.8
 RECOGNIZE_URL = "https://api.elevenlabs.io/v1/speech-to-text"
 MODEL_ID = "scribe_v2"
-
-
-def _load_env(path: Path) -> None:
-    """Load KEY=VALUE lines from `path` into os.environ if the file exists."""
-    if not path.is_file():
-        return
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
-
-
-def _require_api_key(api_key: str | None) -> str:
-    """Return `api_key` or ELEVENLABS_API_KEY from the environment."""
-    key = (api_key or os.environ.get("ELEVENLABS_API_KEY") or "").strip()
-    if not key:
-        raise RuntimeError("ELEVENLABS_API_KEY is missing. Set it in .env")
-    return key
 
 
 def _multipart_body(
@@ -144,8 +125,8 @@ def recognize(api_key: str, wav_bytes: bytes) -> dict:
 
 def transcribe_wav(wav_bytes: bytes, *, api_key: str | None = None) -> str:
     """Return a timestamped Burmese transcript from 16 kHz mono WAV bytes."""
-    _load_env(ROOT / ".env")
-    body = recognize(_require_api_key(api_key), wav_bytes)
+    load_env(ROOT / ".env")
+    body = recognize(require_api_key(api_key, name="ELEVENLABS_API_KEY"), wav_bytes)
     transcript = format_transcript(body).strip()
     if not transcript:
         raise RuntimeError("No transcript returned.")

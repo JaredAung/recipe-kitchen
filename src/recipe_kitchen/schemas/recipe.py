@@ -78,3 +78,10 @@ class RecipeCreate(BaseModel):
         if info.field_name == "transcript_my" and not stripped:
             return None
         return stripped
+
+
+class VisualExtract(BaseModel):
+    ingredients: list[Ingredient]
+    steps: list[Step]
+    transcript_en: str
+    usage: dict[str, Any] = Field(default_factory=dict)

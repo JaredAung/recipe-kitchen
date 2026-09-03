@@ -1,0 +1,57 @@
+$kind: http-request
+name: Extract Visual Recipe Video
+method: POST
+url: '{{baseUrl}}/video'
+order: 5000
+description: |-
+  Upload a recipe video and extract ingredients and steps from on-screen text,
+  packaging, and cooking actions with Gemini 3.5 Flash Lite. Saves a visual-channel recipe.
+
+  **Request body** (multipart form-data):
+  | Field | Type | Required | Description |
+  |-------|------|----------|-------------|
+  | file  | file | ✅       | Recipe video (.mp4, .mov, .mkv, .webm, .avi, .m4v) |
+
+  **Successful response (200)**:
+  ```json
+  {
+    "id": "<recipe-uuid>",
+    "ingredients": [
+      {
+        "name": "capsicum",
+        "amount": "",
+        "evidence": "Capsicum",
+        "source": "visual"
+      }
+    ],
+    "steps": [
+      {
+        "order": 1,
+        "instruction": "Add capsicum",
+        "evidence": "Capsicum",
+        "source": "visual"
+      }
+    ],
+    "usage": {
+      "prompt_token_count": 0,
+      "candidates_token_count": 0,
+      "total_token_count": 0
+    }
+  }
+  ```
+
+  **Error responses**:
+  | Status | Reason |
+  |--------|--------|
+  | 400    | Unsupported file type or empty upload |
+  | 422    | Saved recipe failed validation |
+  | 502    | Gemini extract failed |
+auth:
+  type: noauth
+body:
+  type: formdata
+  content:
+    - key: file
+      type: file
+      src: '/Users/yemarnaung/Documents/Projects/recipe-kitchen/testing-material/test6.mp4'
+      description: 'Recipe video with on-screen ingredients or steps (.mp4, .mov, .mkv, .webm, .avi, .m4v)'
