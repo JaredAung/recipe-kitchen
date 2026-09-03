@@ -1,5 +1,6 @@
+from collections.abc import Iterator
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -69,7 +70,7 @@ def _stub_metadata() -> object:
 
 
 @pytest.fixture(autouse=True)
-def delete_stored_video() -> object:
+def delete_stored_video() -> Iterator[MagicMock]:
     with patch(DELETE_VIDEO) as mocked:
         yield mocked
 
@@ -393,7 +394,7 @@ def test_pipeline_does_not_fetch_video_when_caption_is_enough() -> None:
     extract_visual.assert_not_called()
 
 
-def test_pipeline_deletes_stored_video_after_run(delete_stored_video: object) -> None:
+def test_pipeline_deletes_stored_video_after_run(delete_stored_video: MagicMock) -> None:
     caption = "Fry a whole fish"
     with (
         patch(
@@ -415,7 +416,7 @@ def test_pipeline_deletes_stored_video_after_run(delete_stored_video: object) ->
     delete_stored_video.assert_called_once_with("123/video.mp4")
 
 
-def test_pipeline_does_not_delete_local_video(delete_stored_video: object) -> None:
+def test_pipeline_does_not_delete_local_video(delete_stored_video: MagicMock) -> None:
     caption = "Fry a whole fish"
     with (
         patch(
@@ -433,7 +434,7 @@ def test_pipeline_does_not_delete_local_video(delete_stored_video: object) -> No
     delete_stored_video.assert_not_called()
 
 
-def test_pipeline_deletes_stored_video_when_graph_fails(delete_stored_video: object) -> None:
+def test_pipeline_deletes_stored_video_when_graph_fails(delete_stored_video: MagicMock) -> None:
     with (
         patch(EXTRACT_CAPTION, side_effect=RuntimeError("Gemini failed")),
         pytest.raises(RuntimeError, match="Gemini failed"),
