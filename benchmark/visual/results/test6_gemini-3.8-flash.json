@@ -1,0 +1,132 @@
+{
+  "ingredients": [
+    {
+      "name": "Maggi noodles",
+      "amount": "1 packet",
+      "evidence": "A packet of Maggi 2-Minute Noodles is opened and boiled in a pan",
+      "source": "visual"
+    },
+    {
+      "name": "eggs",
+      "amount": "2",
+      "evidence": "Two eggs are cracked into a glass bowl",
+      "source": "visual"
+    },
+    {
+      "name": "onion",
+      "amount": "",
+      "evidence": "Chopped onion is poured into the bowl with eggs",
+      "source": "visual"
+    },
+    {
+      "name": "tomato",
+      "amount": "",
+      "evidence": "Diced tomato is added into the bowl",
+      "source": "visual"
+    },
+    {
+      "name": "capsicum",
+      "amount": "",
+      "evidence": "Chopped green capsicum is added, labeled with on-screen text 'Capsicum'",
+      "source": "visual"
+    },
+    {
+      "name": "black pepper",
+      "amount": "",
+      "evidence": "Ground black pepper is seasoned over the mixture, labeled 'Black Pepper'",
+      "source": "visual"
+    },
+    {
+      "name": "butter",
+      "amount": "",
+      "evidence": "A cube of butter is melted in a frying pan",
+      "source": "visual"
+    },
+    {
+      "name": "shredded cheese",
+      "amount": "",
+      "evidence": "Shredded cheese is sprinkled on top of the cooking noodle omelet",
+      "source": "visual"
+    },
+    {
+      "name": "chilli flakes",
+      "amount": "",
+      "evidence": "Chilli flakes are sprinkled on top, labeled 'Chilli Flakes'",
+      "source": "visual"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "instruction": "Boil the noodles in boiling water until cooked, then drain and set aside.",
+      "evidence": "A block of noodles is dropped into boiling water and stirred with chopsticks",
+      "source": "visual"
+    },
+    {
+      "order": 2,
+      "instruction": "In a bowl, crack the eggs and add the chopped onion, tomato, capsicum, and black pepper.",
+      "evidence": "Eggs are cracked into a bowl, followed by adding onion, tomato, capsicum, and grinding black pepper",
+      "source": "visual"
+    },
+    {
+      "order": 3,
+      "instruction": "Whisk the egg and vegetable mixture thoroughly.",
+      "evidence": "The mixture is beaten with a fork",
+      "source": "visual"
+    },
+    {
+      "order": 4,
+      "instruction": "Add the cooked noodles to the egg mixture and mix well.",
+      "evidence": "Boiled noodles are placed into the bowl and stirred into the egg mixture",
+      "source": "visual"
+    },
+    {
+      "order": 5,
+      "instruction": "Melt butter in a pan over medium heat.",
+      "evidence": "A knob of butter is spread around the hot frying pan with a spatula",
+      "source": "visual"
+    },
+    {
+      "order": 6,
+      "instruction": "Pour the noodle mixture into the pan and spread it evenly into a round shape.",
+      "evidence": "The mixture is transferred to the pan and flattened with a spatula",
+      "source": "visual"
+    },
+    {
+      "order": 7,
+      "instruction": "Top with shredded cheese and chilli flakes.",
+      "evidence": "Shredded cheese is scattered on top followed by sprinkling chilli flakes",
+      "source": "visual"
+    },
+    {
+      "order": 8,
+      "instruction": "Cover the pan with a lid and cook until the cheese is completely melted.",
+      "evidence": "A glass lid is placed over the pan until the cheese is fully melted",
+      "source": "visual"
+    },
+    {
+      "order": 9,
+      "instruction": "Transfer to a cutting board, slice into wedges, and serve.",
+      "evidence": "The cooked noodle pizza is placed on a board and cut into slices with a knife",
+      "source": "visual"
+    }
+  ],
+  "usage": {
+    "prompt_token_count": 7439,
+    "candidates_token_count": 877,
+    "thoughts_token_count": 873,
+    "total_token_count": 9189,
+    "prompt_tokens_details": [
+      {
+        "modality": "VIDEO",
+        "token_count": 7225
+      },
+      {
+        "modality": "TEXT",
+        "token_count": 214
+      }
+    ]
+  },
+  "model": "gemini-3.8-flash",
+  "elapsed_seconds": 6.58
+}

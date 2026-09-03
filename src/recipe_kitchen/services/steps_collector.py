@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-import os
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Literal, TypedDict
+
+from recipe_kitchen.utils import load_env, parse_json, require_api_key
 
 ROOT = Path(__file__).resolve().parents[3]
 MODEL = "gemini-3.5-flash-lite"
@@ -65,43 +66,6 @@ RESPONSE_SCHEMA = {
 }
 
 
-def _load_env(path: Path) -> None:
-    """Load KEY=VALUE lines from `path` into os.environ if the file exists."""
-    if not path.is_file():
-        return
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line or line.startswith("#") or "=" not in line:
-            continue
-        key, _, value = line.partition("=")
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
-
-
-def _require_api_key(api_key: str | None) -> str:
-    """Return `api_key` or GEMINI_API_KEY from the environment."""
-    key = (api_key or os.environ.get("GEMINI_API_KEY") or "").strip()
-    if not key:
-        raise RuntimeError("GEMINI_API_KEY is missing. Set it in .env")
-    return key
-
-
-def _parse_json(raw: str) -> dict:
-    """Parse Gemini JSON, stripping markdown fences if present."""
-    text = raw.strip()
-    if text.startswith("```"):
-        text = text.strip("`")
-        if text.lower().startswith("json"):
-            text = text[4:]
-        text = text.strip()
-    try:
-        parsed = json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"Gemini returned invalid JSON: {raw}") from exc
-    if not isinstance(parsed, dict):
-        raise RuntimeError(f"Gemini returned unexpected JSON: {raw}")
-    return parsed
-
-
 def collect_steps(
     text: str,
     source: StepSource,
@@ -112,7 +76,7 @@ def collect_steps(
     if source not in SOURCES:
         raise ValueError(f"source must be one of {SOURCES}, got {source!r}")
 
-    _load_env(ROOT / ".env")
+    load_env(ROOT / ".env")
     recipe_text = text.strip()
     if not recipe_text:
         raise ValueError("Recipe text is empty.")
@@ -130,7 +94,7 @@ def collect_steps(
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Content-Type": "application/json",
-            "x-goog-api-key": _require_api_key(api_key),
+            "x-goog-api-key": require_api_key(api_key),
         },
         method="POST",
     )
@@ -146,7 +110,7 @@ def collect_steps(
     if not raw:
         raise RuntimeError(f"Gemini returned no text: {body}")
 
-    extracted = _parse_json(raw).get("steps") or []
+    extracted = parse_json(raw).get("steps") or []
     steps: list[Step] = []
     for index, item in enumerate(extracted, start=1):
         instruction = str(item.get("instruction") or "").strip()

@@ -1,0 +1,138 @@
+{
+  "ingredients": [
+    {
+      "name": "Maggie 2-Minute Noodles",
+      "amount": "2 packets",
+      "evidence": "Opening 2 packets of Maggie 2-Minute Noodles at 00:00 to 00:02",
+      "source": "visual"
+    },
+    {
+      "name": "egg",
+      "amount": "2",
+      "evidence": "Cracking 2 eggs in a bowl at 00:06 to 00:07",
+      "source": "visual"
+    },
+    {
+      "name": "Capsicum",
+      "amount": "",
+      "evidence": "Adding capsicum at 00:08",
+      "source": "visual"
+    },
+    {
+      "name": "Black Pepper",
+      "amount": "",
+      "evidence": "Adding black pepper at 00:09",
+      "source": "visual"
+    },
+    {
+      "name": "butter",
+      "amount": "",
+      "evidence": "Melting butter in a pan at 00:13 to 00:14",
+      "source": "visual"
+    },
+    {
+      "name": "cheese",
+      "amount": "",
+      "evidence": "Sprinkling cheese at 00:15 to 00:16",
+      "source": "visual"
+    },
+    {
+      "name": "Chilli Flakes",
+      "amount": "",
+      "evidence": "Adding chilli flakes at 00:17",
+      "source": "visual"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "instruction": "Open the noodle packets",
+      "evidence": "Cutting open the noodle packet with scissors at 00:01 to 00:02",
+      "source": "visual"
+    },
+    {
+      "order": 2,
+      "instruction": "Boil the noodles in water",
+      "evidence": "Putting noodles into boiling water at 00:03",
+      "source": "visual"
+    },
+    {
+      "order": 3,
+      "instruction": "Stir the boiling noodles",
+      "evidence": "Stirring noodles with chopsticks at 00:04 to 00:05",
+      "source": "visual"
+    },
+    {
+      "order": 4,
+      "instruction": "Crack eggs into a bowl",
+      "evidence": "Cracking eggs into a glass bowl at 00:06 to 00:07",
+      "source": "visual"
+    },
+    {
+      "order": 5,
+      "instruction": "Add capsicum and black pepper to the eggs",
+      "evidence": "Adding capsicum and black pepper to the bowl at 00:08 to 00:09",
+      "source": "visual"
+    },
+    {
+      "order": 6,
+      "instruction": "Whisk the egg mixture",
+      "evidence": "Whisking the eggs and vegetables with a fork at 00:10",
+      "source": "visual"
+    },
+    {
+      "order": 7,
+      "instruction": "Mix the cooked noodles into the egg mixture",
+      "evidence": "Adding cooked noodles to the bowl and mixing at 00:11 to 00:12",
+      "source": "visual"
+    },
+    {
+      "order": 8,
+      "instruction": "Melt butter in a pan",
+      "evidence": "Melting butter in a pan with a spatula at 00:13 to 00:14",
+      "source": "visual"
+    },
+    {
+      "order": 9,
+      "instruction": "Pour the noodle and egg mixture into the pan",
+      "evidence": "Pouring and spreading the mixture into the pan at 00:15",
+      "source": "visual"
+    },
+    {
+      "order": 10,
+      "instruction": "Top with cheese and chilli flakes",
+      "evidence": "Adding cheese and chilli flakes on top at 00:16 to 00:18",
+      "source": "visual"
+    },
+    {
+      "order": 11,
+      "instruction": "Cover and cook",
+      "evidence": "Covering the pan with a lid at 00:19",
+      "source": "visual"
+    },
+    {
+      "order": 12,
+      "instruction": "Slice and serve",
+      "evidence": "Cutting and serving the dish at 00:21 to 00:23",
+      "source": "visual"
+    }
+  ],
+  "usage": {
+    "prompt_token_count": 7439,
+    "candidates_token_count": 977,
+    "thoughts_token_count": 0,
+    "total_token_count": 8416,
+    "prompt_tokens_details": [
+      {
+        "modality": "VIDEO",
+        "token_count": 7225
+      },
+      {
+        "modality": "TEXT",
+        "token_count": 214
+      }
+    ]
+  },
+  "model": "gemini-3.5-flash-lite",
+  "elapsed_seconds": 4.97
+}
