@@ -1,4 +1,4 @@
-"""StateGraph: caption → judge → subtitle → judge → audio → (judge if speech) → visual → judge."""
+"""StateGraph: caption → judge → enrich → save, or the next extract channel."""
 
 from __future__ import annotations
 
@@ -8,9 +8,11 @@ from langgraph.graph.state import CompiledStateGraph
 from recipe_kitchen.graph.nodes import (
     audio_node,
     caption_node,
+    enrich_node,
     route_after_audio,
     route_after_judge,
     route_start,
+    save_node,
     subtitle_node,
     sufficiency_node,
     visual_node,
@@ -31,6 +33,8 @@ def build_recipe_graph() -> CompiledRecipeGraph:
     graph.add_node("audio", audio_node)
     graph.add_node("visual", visual_node)
     graph.add_node("judge", sufficiency_node)
+    graph.add_node("enrich", enrich_node)
+    graph.add_node("save", save_node)
     graph.add_conditional_edges(
         START,
         route_start,
@@ -56,12 +60,15 @@ def build_recipe_graph() -> CompiledRecipeGraph:
         "judge",
         route_after_judge,
         {
+            "enrich": "enrich",
             "subtitle": "subtitle",
             "audio": "audio",
             "visual": "visual",
             "__end__": END,
         },
     )
+    graph.add_edge("enrich", "save")
+    graph.add_edge("save", END)
     return graph.compile()
 
 

@@ -5,78 +5,16 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from recipe_kitchen.db.add_recipe import add_recipe
 from recipe_kitchen.graph.graph import recipe_graph
+from recipe_kitchen.graph.nodes import english_transcript
 from recipe_kitchen.graph.temp_video import track_temp_videos
-from recipe_kitchen.schemas.extract import (
-    CaptionExtract,
-    RecipeGraphState,
-    RecipePipelineResult,
-    StoppedAfter,
-    Sufficiency,
-)
-from recipe_kitchen.schemas.recipe import Ingredient, RecipeCreate, Step
-from recipe_kitchen.services.caption_pipeline import english_caption_text
+from recipe_kitchen.schemas.extract import RecipeGraphState, RecipePipelineResult
 
 ROOT = Path(__file__).resolve().parents[3]
 TEST1_VIDEO = ROOT / "testing-material" / "test1.mp4"
 TEST1_CAPTION = "👉Spicy fried fish that will make even relatives forget👍😋"
 
 logger = logging.getLogger(__name__)
-
-
-def _finish(
-    *,
-    stopped_after: StoppedAfter,
-    judgment: Sufficiency,
-    ingredients: list[Ingredient],
-    steps: list[Step],
-    transcript_my: str | None,
-    transcript_en: str,
-    caption_text: str,
-    subtitle_text: str,
-    original_filename: str | None,
-    source_url: str | None,
-    video_path: str | None,
-    thumbnail_path: str | None,
-    save: bool,
-) -> RecipePipelineResult:
-    """Build the result and optionally persist it."""
-    if save:
-        saved = add_recipe(
-            RecipeCreate(
-                transcript_my=transcript_my,
-                transcript_en=transcript_en,
-                ingredients=ingredients,
-                steps=steps,
-                original_filename=original_filename,
-                source_url=source_url,
-                video_path=video_path,
-                thumbnail_path=thumbnail_path,
-                caption_text=caption_text,
-                extraction_meta={
-                    "stopped_after": stopped_after,
-                    "sufficient": judgment.sufficient,
-                    "reason": judgment.reason,
-                    "subtitle_text": subtitle_text,
-                },
-            )
-        )
-        recipe_id = str(saved["id"])
-        logger.info("Saved recipe %s", recipe_id)
-    else:
-        recipe_id = ""
-    return RecipePipelineResult(
-        id=recipe_id,
-        stopped_after=stopped_after,
-        sufficient=judgment.sufficient,
-        reason=judgment.reason,
-        transcript_my=transcript_my,
-        transcript_en=transcript_en,
-        ingredients=ingredients,
-        steps=steps,
-        caption_text=caption_text,
-    )
 
 
 def _as_state(raw: object) -> RecipeGraphState:
@@ -86,6 +24,33 @@ def _as_state(raw: object) -> RecipeGraphState:
     if isinstance(raw, dict):
         return RecipeGraphState.model_validate(raw)
     raise TypeError(f"Unexpected graph result: {type(raw)!r}")
+
+
+def _to_result(state: RecipeGraphState) -> RecipePipelineResult:
+    """Copy graph state into the API result. `id` is set only after a save."""
+    if state.phase is None:
+        raise RuntimeError("Recipe graph finished without running a channel.")
+    transcript_en = state.transcript_en
+    if not transcript_en.strip():
+        transcript_en = english_transcript(state)
+    return RecipePipelineResult(
+        id=state.recipe_id,
+        stopped_after=state.phase,
+        sufficient=state.sufficient,
+        reason=state.reason,
+        title=state.title,
+        cuisine=state.cuisine,
+        description=state.description,
+        tags=state.tags,
+        total_time_minutes=state.total_time_minutes,
+        validation_issues=state.validation_issues,
+        validation_confidence=state.validation_confidence,
+        transcript_my=state.transcript_my,
+        transcript_en=transcript_en,
+        ingredients=state.ingredients,
+        steps=state.steps,
+        caption_text=state.caption,
+    )
 
 
 def run_recipe_pipeline(
@@ -101,8 +66,9 @@ def run_recipe_pipeline(
 ) -> RecipePipelineResult:
     """Extract from caption, then subtitles, then audio, then visual.
 
-    Stops as soon as `is_sufficient` is true. Later channels run only when
-    earlier ones are not enough and their input is present.
+    Stops as soon as `is_sufficient` is true, then names the dish, flags
+    grounding issues, and saves when `save` is true. Later channels run only
+    when earlier ones are not enough and their input is present.
     """
     logger.info(
         "Recipe graph start caption=%s subtitle=%s local_video=%s stored_video=%s",
@@ -119,48 +85,23 @@ def run_recipe_pipeline(
                     subtitle_text=subtitle_text.strip(),
                     video_path=str(video_path) if video_path else None,
                     video_storage_path=(video_storage_path or "").strip() or None,
+                    save=save,
+                    original_filename=original_filename,
+                    source_url=source_url,
+                    thumbnail_path=thumbnail_path,
                 )
             )
         )
-    if state.phase is None:
-        raise RuntimeError("Recipe graph finished without running a channel.")
     logger.info(
-        "Recipe graph done stopped_after=%s sufficient=%s ingredients=%s steps=%s",
+        "Recipe graph done stopped_after=%s sufficient=%s title=%r id=%s ingredients=%s steps=%s",
         state.phase,
         state.sufficient,
+        state.title,
+        state.recipe_id,
         len(state.ingredients),
         len(state.steps),
     )
-
-    transcript_en = state.transcript_en
-    if state.phase in {"caption", "subtitle"}:
-        transcript_en = english_caption_text(
-            CaptionExtract(
-                ingredients=state.ingredients,
-                steps=state.steps,
-                source_text=state.caption or state.subtitle_text,
-                text_my=state.text_my,
-                text_en=state.text_en,
-            )
-        )
-    elif not transcript_en.strip():
-        transcript_en = state.visual_text or "Recipe extract."
-
-    return _finish(
-        stopped_after=state.phase,
-        judgment=Sufficiency(sufficient=state.sufficient, reason=state.reason),
-        ingredients=state.ingredients,
-        steps=state.steps,
-        transcript_my=state.transcript_my,
-        transcript_en=transcript_en,
-        caption_text=state.caption,
-        subtitle_text=state.subtitle_text,
-        original_filename=original_filename,
-        source_url=source_url,
-        video_path=video_storage_path,
-        thumbnail_path=thumbnail_path,
-        save=save,
-    )
+    return _to_result(state)
 
 
 def main() -> None:
@@ -177,6 +118,12 @@ def main() -> None:
     )
     print(f"stopped_after: {result.stopped_after}")
     print(f"sufficient: {result.sufficient}")
+    print(f"title: {result.title}")
+    print(f"cuisine: {result.cuisine}")
+    print(f"description: {result.description}")
+    print(f"tags: {result.tags}")
+    print(f"total_time_minutes: {result.total_time_minutes}")
+    print(f"validation_confidence: {result.validation_confidence}")
     print(f"reason: {result.reason}")
     print("--- ingredients ---")
     for item in result.ingredients:

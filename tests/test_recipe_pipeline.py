@@ -3,7 +3,12 @@ from unittest.mock import patch
 
 import pytest
 
-from recipe_kitchen.schemas.extract import AudioExtract, CaptionExtract, Sufficiency
+from recipe_kitchen.schemas.extract import (
+    AudioExtract,
+    CaptionExtract,
+    RecipeMetadata,
+    Sufficiency,
+)
 from recipe_kitchen.schemas.recipe import Ingredient, Step, VisualExtract
 from recipe_kitchen.services.recipe_pipeline import run_recipe_pipeline
 
@@ -31,6 +36,15 @@ IS_SUFFICIENT = "recipe_kitchen.graph.nodes.is_sufficient"
 EXTRACT_AUDIO = "recipe_kitchen.graph.nodes.extract_audio_channel"
 EXTRACT_VISUAL = "recipe_kitchen.graph.nodes.extract_visual_channel"
 FETCH_VIDEO = "recipe_kitchen.graph.nodes.fetch_stored_video"
+EXTRACT_METADATA = "recipe_kitchen.graph.nodes.extract_recipe_metadata"
+ADD_RECIPE = "recipe_kitchen.graph.nodes.add_recipe"
+METADATA = RecipeMetadata(
+    title="Fried Fish",
+    cuisine="chinese",
+    description="Pan-fried fish with a simple seasoning.",
+    tags=["fish", "fried"],
+    total_time_minutes=25,
+)
 
 
 def _caption_extract(
@@ -45,6 +59,12 @@ def _caption_extract(
         source_text=text,
         text_en=text,
     )
+
+
+@pytest.fixture(autouse=True)
+def _stub_metadata() -> object:
+    with patch(EXTRACT_METADATA, return_value=METADATA):
+        yield
 
 
 def test_pipeline_skips_marketing_caption_and_runs_audio() -> None:
@@ -263,6 +283,30 @@ def test_pipeline_ends_without_video_when_text_is_not_enough() -> None:
     extract_visual.assert_not_called()
 
 
+def test_pipeline_does_not_enrich_when_insufficient() -> None:
+    with (
+        patch(
+            EXTRACT_CAPTION,
+            return_value=_caption_extract(
+                ingredients=[CAPTION_FISH],
+                steps=[CAPTION_FRY],
+                text="thin caption",
+            ),
+        ),
+        patch(IS_SUFFICIENT, return_value=Sufficiency(sufficient=False, reason="too thin")),
+        patch(EXTRACT_METADATA) as extract_metadata,
+    ):
+        result = run_recipe_pipeline(caption="thin caption", subtitle_text="", save=False)
+
+    extract_metadata.assert_not_called()
+    assert result.title == ""
+    assert result.cuisine == ""
+    assert result.description == ""
+    assert result.tags == []
+    assert result.total_time_minutes is None
+    assert result.validation_confidence is None
+
+
 def test_pipeline_merges_duplicate_ingredient_from_audio() -> None:
     audio_fish = Ingredient(
         name="fish",
@@ -463,3 +507,123 @@ def test_pipeline_skips_audio_judge_when_silent_and_no_caption() -> None:
     assert result.stopped_after == "visual"
     assert judge.call_count == 1
     assert result.ingredients == [VISUAL_PEPPER]
+    assert result.title == "Fried Fish"
+
+
+def test_pipeline_enriches_when_sufficient() -> None:
+    caption = "Fry a whole fish"
+    with (
+        patch(
+            EXTRACT_CAPTION,
+            return_value=_caption_extract(
+                ingredients=[CAPTION_FISH],
+                steps=[CAPTION_FRY],
+                text=caption,
+            ),
+        ),
+        patch(IS_SUFFICIENT, return_value=Sufficiency(sufficient=True, reason="complete")),
+        patch(EXTRACT_AUDIO) as extract_audio,
+        patch(EXTRACT_METADATA, return_value=METADATA) as extract_metadata,
+    ):
+        result = run_recipe_pipeline(
+            caption=caption,
+            video_path=Path("video.mp4"),
+            save=False,
+        )
+
+    assert result.stopped_after == "caption"
+    assert result.sufficient is True
+    assert result.title == "Fried Fish"
+    assert result.cuisine == "chinese"
+    assert result.description == "Pan-fried fish with a simple seasoning."
+    assert result.tags == ["fish", "fried"]
+    assert result.total_time_minutes == 25
+    assert result.validation_confidence == 1.0
+    extract_metadata.assert_called_once()
+    extract_audio.assert_not_called()
+
+
+def test_pipeline_flags_issues_without_blocking() -> None:
+    invented = Ingredient(
+        name="fish",
+        amount="1",
+        evidence="totally invented quote xyz",
+        source="caption",
+    )
+    spices = Ingredient(name="spices", amount="", evidence="add spices", source="caption")
+    fry = Step(order=1, instruction="Fry the fish", evidence="fry", source="caption")
+    caption = "Fry the fish and add spices"
+    with (
+        patch(
+            EXTRACT_CAPTION,
+            return_value=_caption_extract(
+                ingredients=[invented, spices],
+                steps=[fry],
+                text=caption,
+            ),
+        ),
+        patch(IS_SUFFICIENT, return_value=Sufficiency(sufficient=True, reason="complete")),
+    ):
+        result = run_recipe_pipeline(caption=caption, save=False)
+
+    codes = {issue.code for issue in result.validation_issues}
+    assert result.sufficient is True
+    assert result.title == "Fried Fish"
+    assert "ungrounded_evidence" in codes
+    assert "generic_name" in codes
+    assert result.validation_confidence is not None
+    assert result.validation_confidence < 1.0
+
+
+def test_pipeline_saves_after_enrich() -> None:
+    caption = "Fry a whole fish"
+    with (
+        patch(
+            EXTRACT_CAPTION,
+            return_value=_caption_extract(
+                ingredients=[CAPTION_FISH],
+                steps=[CAPTION_FRY],
+                text=caption,
+            ),
+        ),
+        patch(IS_SUFFICIENT, return_value=Sufficiency(sufficient=True, reason="complete")),
+        patch(ADD_RECIPE, return_value={"id": "rec-1"}) as add_recipe,
+    ):
+        result = run_recipe_pipeline(
+            caption=caption,
+            original_filename="fish.mp4",
+            source_url="https://example.com/reel",
+            save=True,
+        )
+
+    assert result.id == "rec-1"
+    add_recipe.assert_called_once()
+    created = add_recipe.call_args.args[0]
+    assert created.title == "Fried Fish"
+    assert created.cuisine == "chinese"
+    assert created.description == "Pan-fried fish with a simple seasoning."
+    assert created.tags == ["fish", "fried"]
+    assert created.total_time_minutes == 25
+    assert created.original_filename == "fish.mp4"
+    assert created.source_url == "https://example.com/reel"
+    assert created.extraction_meta["sufficient"] is True
+
+
+def test_pipeline_does_not_save_when_insufficient() -> None:
+    with (
+        patch(
+            EXTRACT_CAPTION,
+            return_value=_caption_extract(
+                ingredients=[CAPTION_FISH],
+                steps=[CAPTION_FRY],
+                text="thin caption",
+            ),
+        ),
+        patch(IS_SUFFICIENT, return_value=Sufficiency(sufficient=False, reason="too thin")),
+        patch(ADD_RECIPE) as add_recipe,
+    ):
+        result = run_recipe_pipeline(caption="thin caption", save=True)
+
+    add_recipe.assert_not_called()
+    assert result.id == ""
+    assert result.sufficient is False

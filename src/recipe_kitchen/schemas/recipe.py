@@ -56,28 +56,27 @@ class RecipeCreate(BaseModel):
     user_id: UUID | None = None
     title: str | None = None
     description: str | None = None
-    cuisine: str = "burmese"
+    cuisine: str = ""
     tags: list[str] = Field(default_factory=list)
-    prep_time_minutes: int | None = Field(default=None, ge=0)
-    cook_time_minutes: int | None = Field(default=None, ge=0)
     total_time_minutes: int | None = Field(default=None, ge=0)
     difficulty: Difficulty = "medium"
     source_url: str | None = None
     original_filename: str | None = None
-    duration_seconds: float | None = Field(default=None, ge=0)
     video_path: str | None = None
     thumbnail_path: str | None = None
     caption_text: str = ""
     extraction_meta: dict[str, Any] = Field(default_factory=dict)
 
-    @field_validator("transcript_my", "transcript_en", "caption_text", mode="before")
+    @field_validator(
+        "transcript_my", "transcript_en", "caption_text", "cuisine", "description", mode="before"
+    )
     @classmethod
     def strip_text(cls, value: object, info: ValidationInfo) -> object:
-        """Trim string fields. Blank `transcript_my` becomes None."""
+        """Trim string fields. Blank `transcript_my` or `description` becomes None."""
         if not isinstance(value, str):
             return value
         stripped = value.strip()
-        if info.field_name == "transcript_my" and not stripped:
+        if info.field_name in {"transcript_my", "description"} and not stripped:
             return None
         return stripped
 
