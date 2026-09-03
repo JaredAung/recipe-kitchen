@@ -289,7 +289,6 @@ def save_node(state: RecipeGraphState) -> dict[str, Any]:
             total_time_minutes=state.total_time_minutes,
             original_filename=state.original_filename,
             source_url=state.source_url,
-            video_path=state.video_storage_path,
             thumbnail_path=state.thumbnail_path,
             caption_text=state.caption,
             extraction_meta={

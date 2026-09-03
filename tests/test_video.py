@@ -26,6 +26,16 @@ def test_video_rejects_empty_file(client: TestClient) -> None:
     assert response.json()["detail"] == "Uploaded file is empty."
 
 
+def test_video_rejects_oversize_file(client: TestClient) -> None:
+    with patch("recipe_kitchen.api.uploads.MAX_UPLOAD_BYTES", 4):
+        response = client.post(
+            "/video",
+            files={"file": ("video.mp4", b"12345", "video/mp4")},
+        )
+    assert response.status_code == 413
+    assert response.json()["detail"] == "File too large."
+
+
 def test_video_saves_visual_extract(client: TestClient) -> None:
     extracted = VisualExtract(
         ingredients=[

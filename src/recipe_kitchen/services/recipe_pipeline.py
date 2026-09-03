@@ -9,6 +9,7 @@ from recipe_kitchen.graph.graph import recipe_graph
 from recipe_kitchen.graph.nodes import english_transcript
 from recipe_kitchen.graph.temp_video import track_temp_videos
 from recipe_kitchen.schemas.extract import RecipeGraphState, RecipePipelineResult
+from recipe_kitchen.services.ingestion.video_to_bucket import delete_video
 
 ROOT = Path(__file__).resolve().parents[3]
 TEST1_VIDEO = ROOT / "testing-material" / "test1.mp4"
@@ -53,6 +54,18 @@ def _to_result(state: RecipeGraphState) -> RecipePipelineResult:
     )
 
 
+def _delete_stored_video(object_path: str | None) -> None:
+    """Remove a pipeline video from Storage. Logs and continues on failure."""
+    path = (object_path or "").strip()
+    if not path:
+        return
+    try:
+        delete_video(path)
+        logger.info("Deleted stored video %s", path)
+    except RuntimeError:
+        logger.exception("Failed to delete stored video %s", path)
+
+
 def run_recipe_pipeline(
     *,
     caption: str = "",
@@ -69,39 +82,47 @@ def run_recipe_pipeline(
     Stops as soon as `is_sufficient` is true, then names the dish, flags
     grounding issues, and saves when `save` is true. Later channels run only
     when earlier ones are not enough and their input is present.
+
+    After the graph finishes or fails, deletes `video_storage_path` from the
+    bucket. Local uploads (`video_path`) and thumbnails are left in place.
     """
+    stored_video = (video_storage_path or "").strip() or None
     logger.info(
         "Recipe graph start caption=%s subtitle=%s local_video=%s stored_video=%s",
         bool(caption.strip()),
         bool(subtitle_text.strip()),
         str(video_path) if video_path else None,
-        (video_storage_path or "").strip() or None,
+        stored_video,
     )
-    with track_temp_videos():
-        state = _as_state(
-            recipe_graph.invoke(
-                RecipeGraphState(
-                    caption=caption.strip(),
-                    subtitle_text=subtitle_text.strip(),
-                    video_path=str(video_path) if video_path else None,
-                    video_storage_path=(video_storage_path or "").strip() or None,
-                    save=save,
-                    original_filename=original_filename,
-                    source_url=source_url,
-                    thumbnail_path=thumbnail_path,
+    try:
+        with track_temp_videos():
+            state = _as_state(
+                recipe_graph.invoke(
+                    RecipeGraphState(
+                        caption=caption.strip(),
+                        subtitle_text=subtitle_text.strip(),
+                        video_path=str(video_path) if video_path else None,
+                        video_storage_path=stored_video,
+                        save=save,
+                        original_filename=original_filename,
+                        source_url=source_url,
+                        thumbnail_path=thumbnail_path,
+                    )
                 )
             )
+        logger.info(
+            "Recipe graph done stopped_after=%s sufficient=%s title=%r "
+            "id=%s ingredients=%s steps=%s",
+            state.phase,
+            state.sufficient,
+            state.title,
+            state.recipe_id,
+            len(state.ingredients),
+            len(state.steps),
         )
-    logger.info(
-        "Recipe graph done stopped_after=%s sufficient=%s title=%r id=%s ingredients=%s steps=%s",
-        state.phase,
-        state.sufficient,
-        state.title,
-        state.recipe_id,
-        len(state.ingredients),
-        len(state.steps),
-    )
-    return _to_result(state)
+        return _to_result(state)
+    finally:
+        _delete_stored_video(stored_video)
 
 
 def main() -> None:

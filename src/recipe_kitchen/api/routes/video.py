@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from pydantic import BaseModel, ValidationError
 
+from recipe_kitchen.api.uploads import save_upload
 from recipe_kitchen.db.add_recipe import add_recipe
 from recipe_kitchen.schemas.recipe import Ingredient, RecipeCreate, Step
 from recipe_kitchen.services.visual_pipeline import MODEL, VIDEO_FPS, extract_visual_channel
@@ -69,17 +69,7 @@ async def extract_video(
             detail=f"Unsupported file type: {suffix}",
         )
 
-    contents = await file.read()
-    if not contents:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Uploaded file is empty.",
-        )
-
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-        tmp.write(contents)
-        tmp_path = Path(tmp.name)
-
+    tmp_path = await save_upload(file, suffix=suffix)
     try:
         return run_video_pipeline(tmp_path, original_filename=file.filename)
     except FileNotFoundError as exc:
