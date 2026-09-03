@@ -44,6 +44,7 @@ class RecipeGraphState(BaseModel):
     text_my: str | None = None
     text_en: str = ""
     visual_text: str = ""
+    audio_has_speech: bool = True
 
 
 class RecipePipelineResult(BaseModel):

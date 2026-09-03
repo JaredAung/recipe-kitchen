@@ -12,11 +12,13 @@ from recipe_kitchen.schemas.extract import RecipeGraphState
 from recipe_kitchen.services.audio_pipeline import extract_audio_channel
 from recipe_kitchen.services.caption_pipeline import extract_caption_channel
 from recipe_kitchen.services.completeness import is_sufficient
+from recipe_kitchen.services.extract_merge import merge_ingredients, merge_steps
 from recipe_kitchen.services.ingestion.video_to_bucket import fetch_stored_video
 from recipe_kitchen.services.visual_pipeline import extract_visual_channel
 
 StartRoute = Literal["caption", "subtitle", "audio", "__end__"]
 AfterJudgeRoute = Literal["subtitle", "audio", "visual", "__end__"]
+AfterAudioRoute = Literal["judge", "visual"]
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +55,16 @@ def route_after_judge(state: RecipeGraphState) -> AfterJudgeRoute:
     else:
         nxt = "__end__"
     logger.info("After %s judge (sufficient=%s) -> %s", state.phase, state.sufficient, nxt)
+    return nxt
+
+
+def route_after_audio(state: RecipeGraphState) -> AfterAudioRoute:
+    """Skip the audio judge when VAD found no speech; go straight to visual."""
+    if not state.audio_has_speech and _has_video(state):
+        nxt: AfterAudioRoute = "visual"
+    else:
+        nxt = "judge"
+    logger.info("After audio (speech=%s) -> %s", state.audio_has_speech, nxt)
     return nxt
 
 
@@ -94,8 +106,8 @@ def caption_node(state: RecipeGraphState) -> dict[str, Any]:
     )
     return {
         "phase": "caption",
-        "ingredients": extracted.ingredients,
-        "steps": extracted.steps,
+        "ingredients": merge_ingredients([], extracted.ingredients),
+        "steps": merge_steps([], extracted.steps),
         "transcript_my": extracted.text_my,
         "transcript_en": extracted.text_en,
         "text_my": extracted.text_my,
@@ -114,8 +126,8 @@ def subtitle_node(state: RecipeGraphState) -> dict[str, Any]:
     )
     return {
         "phase": "subtitle",
-        "ingredients": [*state.ingredients, *extracted.ingredients],
-        "steps": [*state.steps, *extracted.steps],
+        "ingredients": merge_ingredients(state.ingredients, extracted.ingredients),
+        "steps": merge_steps(state.steps, extracted.steps),
         "transcript_my": extracted.text_my or state.transcript_my,
         "transcript_en": extracted.text_en or state.transcript_en,
         "text_my": extracted.text_my,
@@ -140,13 +152,15 @@ def audio_node(state: RecipeGraphState) -> dict[str, Any]:
         )
     else:
         logger.info("Audio extract done with no transcript")
+    spoken = bool(audio.transcript_en.strip())
     update: dict[str, Any] = {
         "phase": "audio",
         "video_path": video_path,
-        "ingredients": [*state.ingredients, *audio.ingredients],
-        "steps": [*state.steps, *audio.steps],
+        "audio_has_speech": spoken,
+        "ingredients": merge_ingredients(state.ingredients, audio.ingredients),
+        "steps": merge_steps(state.steps, audio.steps),
     }
-    if audio.transcript_en.strip():
+    if spoken:
         update["transcript_my"] = audio.transcript_my
         update["transcript_en"] = audio.transcript_en
         update["text_my"] = audio.transcript_my
@@ -161,14 +175,15 @@ def visual_node(state: RecipeGraphState) -> dict[str, Any]:
     logger.info("Visual extract starting")
     visual = extract_visual_channel(Path(state.video_path))
     logger.info(
-        "Visual extract done: +%s ingredients, +%s steps",
+        "Visual extract done: +%s ingredients, +%s steps confidence=%s",
         len(visual.ingredients),
         len(visual.steps),
+        visual.confidence,
     )
     return {
         "phase": "visual",
-        "ingredients": [*state.ingredients, *visual.ingredients],
-        "steps": [*state.steps, *visual.steps],
+        "ingredients": merge_ingredients(state.ingredients, visual.ingredients),
+        "steps": merge_steps(state.steps, visual.steps),
         "visual_text": visual.transcript_en,
     }
 

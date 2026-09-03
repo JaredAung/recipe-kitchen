@@ -123,13 +123,13 @@ def is_sufficient(
                         "text": PROMPT.format(
                             ingredients=json.dumps(
                                 [
-                                    item.model_dump(exclude={"amount"})
+                                    item.model_dump(exclude={"amount", "confidence"})
                                     for item in ingredients
                                 ],
                                 ensure_ascii=False,
                             ),
                             steps=json.dumps(
-                                [item.model_dump() for item in steps],
+                                [item.model_dump(exclude={"confidence"}) for item in steps],
                                 ensure_ascii=False,
                             ),
                             source_text=source_text.strip() or "(none)",

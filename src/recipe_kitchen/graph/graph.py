@@ -1,4 +1,4 @@
-"""StateGraph: caption → judge → subtitle → judge → audio → judge → visual → judge."""
+"""StateGraph: caption → judge → subtitle → judge → audio → (judge if speech) → visual → judge."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from langgraph.graph.state import CompiledStateGraph
 from recipe_kitchen.graph.nodes import (
     audio_node,
     caption_node,
+    route_after_audio,
     route_after_judge,
     route_start,
     subtitle_node,
@@ -42,7 +43,14 @@ def build_recipe_graph() -> CompiledRecipeGraph:
     )
     graph.add_edge("caption", "judge")
     graph.add_edge("subtitle", "judge")
-    graph.add_edge("audio", "judge")
+    graph.add_conditional_edges(
+        "audio",
+        route_after_audio,
+        {
+            "judge": "judge",
+            "visual": "visual",
+        },
+    )
     graph.add_edge("visual", "judge")
     graph.add_conditional_edges(
         "judge",

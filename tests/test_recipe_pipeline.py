@@ -47,6 +47,44 @@ def _caption_extract(
     )
 
 
+def test_pipeline_skips_marketing_caption_and_runs_audio() -> None:
+    caption = "Maggi Omlette 🥪"
+    with (
+        patch(
+            "recipe_kitchen.services.caption_pipeline.collect_ingredients",
+        ) as collect_ing,
+        patch("recipe_kitchen.services.caption_pipeline.collect_steps") as collect_steps,
+        patch(
+            IS_SUFFICIENT,
+            side_effect=[
+                Sufficiency(sufficient=False, reason="Need at least one ingredient and one step."),
+                Sufficiency(sufficient=True, reason="audio completes it"),
+            ],
+        ),
+        patch(
+            EXTRACT_AUDIO,
+            return_value=AudioExtract(
+                transcript_en="Heat oil and fry the fish",
+                ingredients=[AUDIO_OIL],
+                steps=[AUDIO_HEAT],
+            ),
+        ) as extract_audio,
+        patch(EXTRACT_VISUAL) as extract_visual,
+    ):
+        result = run_recipe_pipeline(
+            caption=caption,
+            video_path=Path("video.mp4"),
+            save=False,
+        )
+
+    assert result.stopped_after == "audio"
+    assert result.ingredients == [AUDIO_OIL]
+    collect_ing.assert_not_called()
+    collect_steps.assert_not_called()
+    extract_audio.assert_called_once()
+    extract_visual.assert_not_called()
+
+
 def test_pipeline_stops_after_sufficient_caption() -> None:
     caption = "Fry a whole fish"
     with (
@@ -225,6 +263,52 @@ def test_pipeline_ends_without_video_when_text_is_not_enough() -> None:
     extract_visual.assert_not_called()
 
 
+def test_pipeline_merges_duplicate_ingredient_from_audio() -> None:
+    audio_fish = Ingredient(
+        name="fish",
+        amount="1",
+        evidence="washed fish",
+        source="audio",
+    )
+    with (
+        patch(
+            EXTRACT_CAPTION,
+            return_value=_caption_extract(
+                ingredients=[CAPTION_FISH],
+                steps=[CAPTION_FRY],
+                text="a fish dish",
+            ),
+        ),
+        patch(
+            IS_SUFFICIENT,
+            side_effect=[
+                Sufficiency(sufficient=False, reason="caption too thin"),
+                Sufficiency(sufficient=True, reason="audio completes it"),
+            ],
+        ),
+        patch(
+            EXTRACT_AUDIO,
+            return_value=AudioExtract(
+                transcript_en="Wash the fish and heat oil",
+                ingredients=[audio_fish, AUDIO_OIL],
+                steps=[AUDIO_HEAT],
+            ),
+        ),
+        patch(EXTRACT_VISUAL),
+    ):
+        result = run_recipe_pipeline(
+            caption="a fish dish",
+            video_path=Path("video.mp4"),
+            save=False,
+        )
+
+    assert result.ingredients == [audio_fish, AUDIO_OIL]
+    assert result.steps == [
+        CAPTION_FRY,
+        AUDIO_HEAT.model_copy(update={"order": 2}),
+    ]
+
+
 def test_pipeline_requires_a_channel() -> None:
     with pytest.raises(RuntimeError, match="without running a channel"):
         run_recipe_pipeline(caption="", subtitle_text="", save=False)
@@ -328,10 +412,9 @@ def test_pipeline_skips_stt_overwrite_when_audio_has_no_speech() -> None:
             IS_SUFFICIENT,
             side_effect=[
                 Sufficiency(sufficient=False, reason="caption too thin"),
-                Sufficiency(sufficient=False, reason="no speech"),
                 Sufficiency(sufficient=True, reason="visual completes it"),
             ],
-        ),
+        ) as is_sufficient,
         patch(
             EXTRACT_AUDIO,
             return_value=AudioExtract(transcript_en="", ingredients=[], steps=[]),
@@ -354,3 +437,29 @@ def test_pipeline_skips_stt_overwrite_when_audio_has_no_speech() -> None:
     assert result.stopped_after == "visual"
     assert result.transcript_en == caption
     assert result.ingredients == [CAPTION_FISH, VISUAL_PEPPER]
+    assert is_sufficient.call_count == 2
+
+
+def test_pipeline_skips_audio_judge_when_silent_and_no_caption() -> None:
+    with (
+        patch(EXTRACT_CAPTION) as extract_caption,
+        patch(IS_SUFFICIENT, return_value=Sufficiency(sufficient=True, reason="visual")) as judge,
+        patch(
+            EXTRACT_AUDIO,
+            return_value=AudioExtract(transcript_en="", ingredients=[], steps=[]),
+        ),
+        patch(
+            EXTRACT_VISUAL,
+            return_value=VisualExtract(
+                ingredients=[VISUAL_PEPPER],
+                steps=[VISUAL_ADD],
+                transcript_en="Capsicum",
+            ),
+        ),
+    ):
+        result = run_recipe_pipeline(caption="", video_path=Path("video.mp4"), save=False)
+
+    extract_caption.assert_not_called()
+    assert result.stopped_after == "visual"
+    assert judge.call_count == 1
+    assert result.ingredients == [VISUAL_PEPPER]
