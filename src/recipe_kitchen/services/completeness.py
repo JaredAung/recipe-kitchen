@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
 from recipe_kitchen.schemas.extract import Sufficiency
 from recipe_kitchen.schemas.recipe import Ingredient, Step
+from recipe_kitchen.services.usage import record_gemini_rest
 
 ROOT = Path(__file__).resolve().parents[3]
 MODEL = "gemini-3.5-flash-lite"
@@ -17,15 +19,24 @@ GENERATE_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL}
 
 PROMPT = """Judge whether a home cook could recreate this dish from the extract alone.
 
-The extract may come from a Facebook caption, video subtitles, or spoken audio.
+The extract may come from a Facebook caption, video subtitles, spoken audio,
+or on-screen visual text.
 Treat the steps as a story and the ingredients as the characters.
 Set sufficient to true only if:
-- The story makes sense and is coherent without any missing gaps.
+- The story makes sense and is coherent without missing cooking actions.
 - The characters are present and have a role in the story.
-- The story is complete and does not require any additional information.
+- A cook could follow the method without inventing major ingredients or steps.
 
-Set sufficient to false if a cook would have to guess major ingredients and method.
-Do not assume unstated ingredients or steps.
+Amounts, measurements, quantities, and cooking times are optional and are
+not part of this judgment. Do not set sufficient to false because amounts
+or times are missing.
+
+Judge the ingredients and steps as they stand. Source text is supporting
+evidence. A caption or title that does not match the extracted dish is not
+a reason to mark insufficient.
+
+Set sufficient to false only if a cook would have to guess major ingredients
+or method. Do not assume unstated ingredients or steps.
 Return JSON only.
 
 Ingredients (JSON):
@@ -92,9 +103,10 @@ def is_sufficient(
     source_text: str = "",
     api_key: str | None = None,
 ) -> Sufficiency:
-    """Return whether a cook could recreate the dish from this extract.
+    """Return whether ingredients and steps form a coherent method.
 
-    Skips Gemini when there are no ingredients or no steps.
+    Amounts and cooking times are ignored. Skips Gemini when there are no
+    ingredients or no steps.
     """
     if not ingredients or not steps:
         return Sufficiency(
@@ -110,7 +122,10 @@ def is_sufficient(
                     {
                         "text": PROMPT.format(
                             ingredients=json.dumps(
-                                [item.model_dump() for item in ingredients],
+                                [
+                                    item.model_dump(exclude={"amount"})
+                                    for item in ingredients
+                                ],
                                 ensure_ascii=False,
                             ),
                             steps=json.dumps(
@@ -138,12 +153,14 @@ def is_sufficient(
         },
         method="POST",
     )
+    started = time.perf_counter()
     try:
         with urllib.request.urlopen(request, timeout=120) as response:
             body = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"Gemini HTTP {exc.code}: {detail}") from exc
+    record_gemini_rest("gemini_judge", body, time.perf_counter() - started)
 
     parts = body.get("candidates", [{}])[0].get("content", {}).get("parts", [])
     raw = "".join(part.get("text", "") for part in parts).strip()

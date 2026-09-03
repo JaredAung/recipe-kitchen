@@ -1,0 +1,60 @@
+$kind: http-request
+name: Extract Recipe
+method: POST
+url: '{{baseUrl}}/recipe'
+order: 4500
+description: |-
+  Run caption → subtitle → audio → visual extract on an ingested Facebook video
+  and save the recipe. Stops as soon as the extract is enough to recreate the dish.
+
+  Call `POST /ingest` first, then send its caption, subtitles, and storage paths here.
+
+  **Request body** (JSON):
+  | Field              | Type   | Required | Description                                      |
+  |--------------------|--------|----------|--------------------------------------------------|
+  | caption            | string |          | Facebook post caption                            |
+  | subtitle_text      | string |          | Downloaded subtitle text                         |
+  | video              | string |          | Storage path from ingest (`<id>/video.mp4`)      |
+  | thumbnail          | string |          | Storage path from ingest (`<id>/thumbnail.jpg`)  |
+  | source_url         | string |          | Original Facebook URL                            |
+  | original_filename  | string |          | Filename to store on the recipe                  |
+
+  Provide at least a caption, subtitles, or a video path.
+
+  **Successful response (200)**:
+  ```json
+  {
+    "id": "<recipe-uuid>",
+    "stopped_after": "caption",
+    "sufficient": true,
+    "reason": "complete",
+    "transcript_my": null,
+    "transcript_en": "Fry a whole fish",
+    "ingredients": [],
+    "steps": [],
+    "caption_text": "Fry a whole fish"
+  }
+  ```
+
+  **Error responses**:
+  | Status | Reason |
+  |--------|--------|
+  | 400    | No caption, subtitles, or video path |
+  | 422    | Saved recipe failed validation |
+  | 502    | Storage download or extract failed |
+auth:
+  type: noauth
+body:
+  type: json
+  content: |-
+    {
+      "caption": "👉Spicy fried fish that will make even relatives forget👍😋",
+      "subtitle_text": "",
+      "video": "<video_id>/video.mp4",
+      "thumbnail": "<video_id>/thumbnail.jpg",
+      "source_url": "https://www.facebook.com/reel/1033484732739023",
+      "original_filename": "video.mp4"
+    }
+headers:
+  - key: Content-Type
+    value: application/json

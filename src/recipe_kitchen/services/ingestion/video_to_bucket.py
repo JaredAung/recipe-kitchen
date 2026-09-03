@@ -76,6 +76,21 @@ def download_video(video_url: str, object_path: str) -> StoredVideo:
     return StoredVideo(bucket=bucket, path=path)
 
 
+def fetch_stored_video(object_path: str) -> bytes:
+    """Download a stored video object as bytes."""
+    storage, _bucket = _storage()
+    path = object_path.lstrip("/")
+    if not path:
+        raise RuntimeError("Video object path is empty.")
+    try:
+        data = storage.download(path)
+    except StorageException as exc:
+        raise RuntimeError(f"Failed to download video: {exc}") from exc
+    if not data:
+        raise RuntimeError("Stored video was empty.")
+    return data
+
+
 def delete_video(object_path: str) -> None:
     """Remove `object_path` from the Storage bucket."""
     storage, _bucket = _storage()

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,7 @@ from google.genai import errors, types
 from pydantic import BaseModel, Field, model_validator
 
 from recipe_kitchen.schemas.recipe import Ingredient, Step, VisualExtract
+from recipe_kitchen.services.usage import record_token_usage
 from recipe_kitchen.utils import load_env, parse_json, require_api_key
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -124,6 +126,7 @@ def extract_visual_channel(video_path: Path, *, api_key: str | None = None) -> V
         video_metadata=types.VideoMetadata.model_validate({"fps": float(VIDEO_FPS)}),
     )
     try:
+        started = time.perf_counter()
         response = client.models.generate_content(
             model=MODEL,
             contents=[video_part, PROMPT],
@@ -134,6 +137,11 @@ def extract_visual_channel(video_path: Path, *, api_key: str | None = None) -> V
                 media_resolution=types.MediaResolution.MEDIA_RESOLUTION_HIGH,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             ),
+        )
+        record_token_usage(
+            "gemini_visual",
+            time.perf_counter() - started,
+            _usage(response),
         )
     except errors.APIError as exc:
         raise RuntimeError(f"Gemini HTTP {exc.code}: {exc.message}") from exc

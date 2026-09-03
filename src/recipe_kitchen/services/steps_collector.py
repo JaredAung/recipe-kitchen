@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Literal, TypedDict
 
+from recipe_kitchen.services.usage import record_gemini_rest
 from recipe_kitchen.utils import load_env, parse_json, require_api_key
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -98,12 +100,14 @@ def collect_steps(
         },
         method="POST",
     )
+    started = time.perf_counter()
     try:
         with urllib.request.urlopen(request, timeout=120) as response:
             body = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"Gemini HTTP {exc.code}: {detail}") from exc
+    record_gemini_rest("gemini_steps", body, time.perf_counter() - started)
 
     parts = body.get("candidates", [{}])[0].get("content", {}).get("parts", [])
     raw = "".join(part.get("text", "") for part in parts).strip()
