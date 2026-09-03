@@ -38,6 +38,7 @@ EXTRACT_VISUAL = "recipe_kitchen.graph.nodes.extract_visual_channel"
 FETCH_VIDEO = "recipe_kitchen.graph.nodes.fetch_stored_video"
 EXTRACT_METADATA = "recipe_kitchen.graph.nodes.extract_recipe_metadata"
 ADD_RECIPE = "recipe_kitchen.graph.nodes.add_recipe"
+DELETE_VIDEO = "recipe_kitchen.services.recipe_pipeline.delete_video"
 METADATA = RecipeMetadata(
     title="Fried Fish",
     cuisine="chinese",
@@ -65,6 +66,12 @@ def _caption_extract(
 def _stub_metadata() -> object:
     with patch(EXTRACT_METADATA, return_value=METADATA):
         yield
+
+
+@pytest.fixture(autouse=True)
+def delete_stored_video() -> object:
+    with patch(DELETE_VIDEO) as mocked:
+        yield mocked
 
 
 def test_pipeline_skips_marketing_caption_and_runs_audio() -> None:
@@ -386,6 +393,60 @@ def test_pipeline_does_not_fetch_video_when_caption_is_enough() -> None:
     extract_visual.assert_not_called()
 
 
+def test_pipeline_deletes_stored_video_after_run(delete_stored_video: object) -> None:
+    caption = "Fry a whole fish"
+    with (
+        patch(
+            EXTRACT_CAPTION,
+            return_value=_caption_extract(
+                ingredients=[CAPTION_FISH],
+                steps=[CAPTION_FRY],
+                text=caption,
+            ),
+        ),
+        patch(IS_SUFFICIENT, return_value=Sufficiency(sufficient=True, reason="complete")),
+    ):
+        run_recipe_pipeline(
+            caption=caption,
+            video_storage_path="123/video.mp4",
+            save=False,
+        )
+
+    delete_stored_video.assert_called_once_with("123/video.mp4")
+
+
+def test_pipeline_does_not_delete_local_video(delete_stored_video: object) -> None:
+    caption = "Fry a whole fish"
+    with (
+        patch(
+            EXTRACT_CAPTION,
+            return_value=_caption_extract(
+                ingredients=[CAPTION_FISH],
+                steps=[CAPTION_FRY],
+                text=caption,
+            ),
+        ),
+        patch(IS_SUFFICIENT, return_value=Sufficiency(sufficient=True, reason="complete")),
+    ):
+        run_recipe_pipeline(caption=caption, video_path=Path("video.mp4"), save=False)
+
+    delete_stored_video.assert_not_called()
+
+
+def test_pipeline_deletes_stored_video_when_graph_fails(delete_stored_video: object) -> None:
+    with (
+        patch(EXTRACT_CAPTION, side_effect=RuntimeError("Gemini failed")),
+        pytest.raises(RuntimeError, match="Gemini failed"),
+    ):
+        run_recipe_pipeline(
+            caption="Fry a whole fish",
+            video_storage_path="123/video.mp4",
+            save=False,
+        )
+
+    delete_stored_video.assert_called_once_with("123/video.mp4")
+
+
 def test_pipeline_fetches_stored_video_in_audio_and_reuses_it_for_visual() -> None:
     seen: list[tuple[str, Path, bool]] = []
 
@@ -606,6 +667,7 @@ def test_pipeline_saves_after_enrich() -> None:
     assert created.total_time_minutes == 25
     assert created.original_filename == "fish.mp4"
     assert created.source_url == "https://example.com/reel"
+    assert created.video_path is None
     assert created.extraction_meta["sufficient"] is True
 
 
