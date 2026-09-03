@@ -132,9 +132,7 @@ def extract_visual_channel(video_path: Path, *, api_key: str | None = None) -> V
                 response_mime_type="application/json",
                 response_schema=_GeminiVisual,
                 media_resolution=types.MediaResolution.MEDIA_RESOLUTION_HIGH,
-                automatic_function_calling=types.AutomaticFunctionCallingConfig(
-                    disable=True
-                ),
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             ),
         )
     except errors.APIError as exc:
