@@ -1,4 +1,4 @@
-"""LangGraph nodes: extract a channel or judge whether the extract is enough."""
+"""LangGraph nodes: extract, judge, enrich, then save."""
 
 from __future__ import annotations
 
@@ -7,17 +7,24 @@ import tempfile
 from pathlib import Path
 from typing import Any, Literal
 
+from recipe_kitchen.db.add_recipe import add_recipe
 from recipe_kitchen.graph.temp_video import register_temp_video
-from recipe_kitchen.schemas.extract import RecipeGraphState
+from recipe_kitchen.schemas.extract import CaptionExtract, RecipeGraphState
+from recipe_kitchen.schemas.recipe import RecipeCreate
 from recipe_kitchen.services.audio_pipeline import extract_audio_channel
-from recipe_kitchen.services.caption_pipeline import extract_caption_channel
+from recipe_kitchen.services.caption_pipeline import (
+    english_caption_text,
+    extract_caption_channel,
+)
 from recipe_kitchen.services.completeness import is_sufficient
 from recipe_kitchen.services.extract_merge import merge_ingredients, merge_steps
 from recipe_kitchen.services.ingestion.video_to_bucket import fetch_stored_video
+from recipe_kitchen.services.recipe_metadata import extract_recipe_metadata
+from recipe_kitchen.services.validation_tools import audit_extract, source_corpus
 from recipe_kitchen.services.visual_pipeline import extract_visual_channel
 
 StartRoute = Literal["caption", "subtitle", "audio", "__end__"]
-AfterJudgeRoute = Literal["subtitle", "audio", "visual", "__end__"]
+AfterJudgeRoute = Literal["enrich", "subtitle", "audio", "visual", "__end__"]
 AfterAudioRoute = Literal["judge", "visual"]
 
 logger = logging.getLogger(__name__)
@@ -43,9 +50,9 @@ def route_start(state: RecipeGraphState) -> StartRoute:
 
 
 def route_after_judge(state: RecipeGraphState) -> AfterJudgeRoute:
-    """Stop when sufficient or after visual; otherwise take the next channel."""
-    if state.sufficient or state.phase == "visual":
-        nxt: AfterJudgeRoute = "__end__"
+    """Enrich when sufficient; otherwise take the next channel or stop."""
+    if state.sufficient:
+        nxt: AfterJudgeRoute = "enrich"
     elif state.phase == "caption" and state.subtitle_text.strip():
         nxt = "subtitle"
     elif state.phase in {"caption", "subtitle"} and _has_video(state):
@@ -202,3 +209,100 @@ def sufficiency_node(state: RecipeGraphState) -> dict[str, Any]:
         judgment.reason,
     )
     return {"sufficient": judgment.sufficient, "reason": judgment.reason}
+
+
+def enrich_node(state: RecipeGraphState) -> dict[str, Any]:
+    """Name the dish, set cuisine, and flag grounding or generic-name issues.
+
+    Does not change `sufficient` or send the graph back to another channel.
+    """
+    issues, confidence = audit_extract(
+        state.ingredients,
+        state.steps,
+        corpus=source_corpus(
+            caption=state.caption,
+            subtitle_text=state.subtitle_text,
+            transcript_en=state.transcript_en,
+            transcript_my=state.transcript_my,
+            text_en=state.text_en,
+            text_my=state.text_my,
+        ),
+    )
+    metadata = extract_recipe_metadata(state.ingredients, state.steps)
+    logger.info(
+        "Enrich after %s: title=%r cuisine=%s tags=%s time=%s issues=%s confidence=%s",
+        state.phase,
+        metadata.title,
+        metadata.cuisine,
+        metadata.tags,
+        metadata.total_time_minutes,
+        len(issues),
+        confidence,
+    )
+    return {
+        "title": metadata.title,
+        "cuisine": metadata.cuisine,
+        "description": metadata.description,
+        "tags": metadata.tags,
+        "total_time_minutes": metadata.total_time_minutes,
+        "validation_issues": issues,
+        "validation_confidence": confidence,
+    }
+
+
+def english_transcript(state: RecipeGraphState) -> str:
+    """English transcript to store: translate caption text, else keep or fall back."""
+    if state.phase in {"caption", "subtitle"}:
+        return english_caption_text(
+            CaptionExtract(
+                ingredients=state.ingredients,
+                steps=state.steps,
+                source_text=state.caption or state.subtitle_text,
+                text_my=state.text_my,
+                text_en=state.text_en,
+            )
+        )
+    if state.transcript_en.strip():
+        return state.transcript_en
+    return state.visual_text or "Recipe extract."
+
+
+def save_node(state: RecipeGraphState) -> dict[str, Any]:
+    """Persist a sufficient extract. Skips the database when `save` is false."""
+    if state.phase is None:
+        raise RuntimeError("Cannot save a recipe before an extract channel ran.")
+    transcript_en = english_transcript(state)
+    update: dict[str, Any] = {"transcript_en": transcript_en}
+    if not state.save:
+        logger.info("Skip save after %s (save=False)", state.phase)
+        return update
+    saved = add_recipe(
+        RecipeCreate(
+            transcript_my=state.transcript_my,
+            transcript_en=transcript_en,
+            ingredients=state.ingredients,
+            steps=state.steps,
+            title=state.title.strip() or None,
+            description=state.description.strip() or None,
+            cuisine=state.cuisine.strip(),
+            tags=state.tags,
+            total_time_minutes=state.total_time_minutes,
+            original_filename=state.original_filename,
+            source_url=state.source_url,
+            video_path=state.video_storage_path,
+            thumbnail_path=state.thumbnail_path,
+            caption_text=state.caption,
+            extraction_meta={
+                "stopped_after": state.phase,
+                "sufficient": state.sufficient,
+                "reason": state.reason,
+                "subtitle_text": state.subtitle_text,
+                "validation_issues": [issue.model_dump() for issue in state.validation_issues],
+                "validation_confidence": state.validation_confidence,
+            },
+        )
+    )
+    recipe_id = str(saved["id"])
+    logger.info("Saved recipe %s after %s", recipe_id, state.phase)
+    update["recipe_id"] = recipe_id
+    return update

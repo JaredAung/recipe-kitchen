@@ -20,15 +20,9 @@ create table public.recipes (
 
   title text,
   description text,
-  cuisine text not null default 'burmese',
+  cuisine text not null default '',
   tags text[] not null default '{}',
 
-  prep_time_minutes integer
-    constraint recipes_prep_time_nonnegative
-      check (prep_time_minutes is null or prep_time_minutes >= 0),
-  cook_time_minutes integer
-    constraint recipes_cook_time_nonnegative
-      check (cook_time_minutes is null or cook_time_minutes >= 0),
   total_time_minutes integer
     constraint recipes_total_time_nonnegative
       check (total_time_minutes is null or total_time_minutes >= 0),
@@ -37,9 +31,6 @@ create table public.recipes (
 
   source_url text,
   original_filename text,
-  duration_seconds numeric
-    constraint recipes_duration_nonnegative
-      check (duration_seconds is null or duration_seconds >= 0),
   video_path text,
   thumbnail_path text,
 
