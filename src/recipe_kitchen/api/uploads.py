@@ -14,6 +14,7 @@ CHUNK_BYTES = 1024 * 1024
 async def save_upload(file: UploadFile, *, suffix: str) -> Path:
     """Write `file` to a temp path. Rejects empty bodies and bodies over 80 MiB."""
     written = 0
+    keep = False
     tmp = tempfile.NamedTemporaryFile(suffix=suffix, delete=False)
     tmp_path = Path(tmp.name)
     try:
@@ -28,15 +29,14 @@ async def save_upload(file: UploadFile, *, suffix: str) -> Path:
                     detail="File too large.",
                 )
             tmp.write(chunk)
-    except Exception:
+        if written == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Uploaded file is empty.",
+            )
+        keep = True
+        return tmp_path
+    finally:
         tmp.close()
-        tmp_path.unlink(missing_ok=True)
-        raise
-    tmp.close()
-    if written == 0:
-        tmp_path.unlink(missing_ok=True)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Uploaded file is empty.",
-        )
-    return tmp_path
+        if not keep:
+            tmp_path.unlink(missing_ok=True)
