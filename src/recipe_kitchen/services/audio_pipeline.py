@@ -31,8 +31,7 @@ def extract_audio_channel(video_path: Path) -> AudioExtract:
     logger.info("Speech detected; transcribing")
     transcript = transcribe_wav(pcm_to_wav(pcm))
     ingredients = [
-        Ingredient.model_validate(item)
-        for item in collect_ingredients(transcript, source="audio")
+        Ingredient.model_validate(item) for item in collect_ingredients(transcript, source="audio")
     ]
     steps = [Step.model_validate(item) for item in collect_steps(transcript, source="audio")]
     if is_burmese(transcript):

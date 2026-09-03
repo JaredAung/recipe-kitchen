@@ -44,9 +44,7 @@ def looks_like_recipe(text: str) -> bool:
     if len(_BULLET_LINE.findall(raw)) >= 3:
         return True
     method_sentences = [
-        part
-        for part in re.split(r"[.!?\n]+", raw)
-        if part.strip() and _METHOD_VERB.search(part)
+        part for part in re.split(r"[.!?\n]+", raw) if part.strip() and _METHOD_VERB.search(part)
     ]
     return len(method_sentences) >= 2
 

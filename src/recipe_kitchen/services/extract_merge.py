@@ -65,6 +65,4 @@ def merge_steps(existing: list[Step], incoming: list[Step]) -> list[Step]:
             merged.append(item)
             continue
         merged[index_by_instruction[key]] = item
-    return [
-        step.model_copy(update={"order": order}) for order, step in enumerate(merged, start=1)
-    ]
+    return [step.model_copy(update={"order": order}) for order, step in enumerate(merged, start=1)]
