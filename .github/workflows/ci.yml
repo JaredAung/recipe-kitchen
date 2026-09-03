@@ -38,6 +38,26 @@ jobs:
       - name: Tests
         run: uv run pytest
 
+  docker:
+    name: Docker image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v3
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          provenance: false
+          sbom: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   secrets:
     name: Secret scan
     runs-on: ubuntu-latest
