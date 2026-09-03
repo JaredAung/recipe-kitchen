@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 import struct
 import subprocess
+import tempfile
 from pathlib import Path
 
 SAMPLE_RATE = 16000
@@ -42,6 +43,40 @@ def extract_pcm(video_path: str | Path, ffmpeg: str | None = None) -> bytes:
     if result.returncode != 0:
         raise RuntimeError(f"ffmpeg failed for {path.name}:\n{result.stderr.decode().strip()}")
     return result.stdout
+
+
+def mute_video(video_path: str | Path, ffmpeg: str | None = None) -> bytes:
+    """Return mp4 bytes with the audio track removed.
+
+    Copies the video stream so this stays cheap. Visual extract should not hear
+    speech that belongs to the audio channel.
+    """
+    path = Path(video_path)
+    ffmpeg = ffmpeg or _require_ffmpeg()
+    with tempfile.NamedTemporaryFile(suffix=".mp4", delete=False) as tmp:
+        out = Path(tmp.name)
+    try:
+        result = subprocess.run(
+            [
+                ffmpeg,
+                "-nostdin",
+                "-i",
+                str(path),
+                "-an",
+                "-c:v",
+                "copy",
+                "-y",
+                str(out),
+            ],
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"ffmpeg mute failed for {path.name}:\n{result.stderr.decode().strip()}"
+            )
+        return out.read_bytes()
+    finally:
+        out.unlink(missing_ok=True)
 
 
 def pcm_to_wav(pcm: bytes) -> bytes:

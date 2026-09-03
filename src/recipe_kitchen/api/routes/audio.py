@@ -1,4 +1,4 @@
-"""Run extract → transcribe → translate → collect → save on an uploaded recipe video."""
+"""Run extract → transcribe → collect → translate → save on an uploaded recipe video."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def run_audio_pipeline(
     *,
     original_filename: str | None = None,
 ) -> AudioPipelineResponse:
-    """Transcribe, translate if Burmese, extract ingredients/steps, and save the recipe."""
+    """Transcribe, extract ingredients/steps, translate if Burmese, and save the recipe."""
     extracted = extract_audio_channel(video_path)
     saved = add_recipe(
         RecipeCreate(

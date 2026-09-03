@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import json
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
+from recipe_kitchen.services.usage import record_gemini_rest
 from recipe_kitchen.utils import load_env, require_api_key
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -71,12 +73,14 @@ def translate_to_english(transcript: str, *, api_key: str | None = None) -> str:
         },
         method="POST",
     )
+    started = time.perf_counter()
     try:
         with urllib.request.urlopen(request, timeout=120) as response:
             body = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"Gemini HTTP {exc.code}: {detail}") from exc
+    record_gemini_rest("gemini_translate", body, time.perf_counter() - started)
 
     parts = body.get("candidates", [{}])[0].get("content", {}).get("parts", [])
     translated = "".join(part.get("text", "") for part in parts).strip()

@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
 from recipe_kitchen.services.audio_extractor import extract_pcm, pcm_to_wav
+from recipe_kitchen.services.usage import record_usage
 from recipe_kitchen.utils import load_env, require_api_key
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -116,11 +118,21 @@ def recognize(api_key: str, wav_bytes: bytes) -> dict:
         method="POST",
     )
     try:
+        started = time.perf_counter()
         with urllib.request.urlopen(request, timeout=180) as response:
-            return json.loads(response.read().decode("utf-8"))
+            body = json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"ElevenLabs HTTP {exc.code}: {detail}") from exc
+    record_usage(
+        "elevenlabs_stt",
+        elapsed_seconds=time.perf_counter() - started,
+        extra={
+            "characters": len(str(body.get("text") or "")),
+            "words": len(body.get("words") or []),
+        },
+    )
+    return body
 
 
 def transcribe_wav(wav_bytes: bytes, *, api_key: str | None = None) -> str:

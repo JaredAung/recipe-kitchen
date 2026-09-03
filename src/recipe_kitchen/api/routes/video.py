@@ -22,6 +22,7 @@ class VideoPipelineResponse(BaseModel):
     id: str
     ingredients: list[Ingredient]
     steps: list[Step]
+    confidence: float | None = None
     usage: dict[str, Any] = {}
 
 
@@ -42,6 +43,7 @@ def run_video_pipeline(
                 "channel": "visual",
                 "model": MODEL,
                 "fps": VIDEO_FPS,
+                "confidence": extracted.confidence,
                 "usage": extracted.usage,
             },
         )
@@ -50,6 +52,7 @@ def run_video_pipeline(
         id=saved["id"],
         ingredients=extracted.ingredients,
         steps=extracted.steps,
+        confidence=extracted.confidence,
         usage=extracted.usage,
     )
 

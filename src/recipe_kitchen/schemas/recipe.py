@@ -23,6 +23,7 @@ class Ingredient(BaseModel):
     amount: str = ""
     evidence: str = Field(min_length=1)
     source: CollectorSource
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
 
     @field_validator("name", "amount", "evidence", mode="before")
     @classmethod
@@ -38,6 +39,7 @@ class Step(BaseModel):
     instruction: str = Field(min_length=1)
     evidence: str = Field(min_length=1)
     source: CollectorSource
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
 
     @field_validator("instruction", "evidence", mode="before")
     @classmethod
@@ -84,4 +86,5 @@ class VisualExtract(BaseModel):
     ingredients: list[Ingredient]
     steps: list[Step]
     transcript_en: str
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     usage: dict[str, Any] = Field(default_factory=dict)
