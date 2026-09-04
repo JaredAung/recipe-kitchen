@@ -87,9 +87,7 @@ def enqueue_upload_job(
 def fetch_job(job_id: str) -> Job | None:
     """Return a job by id, or `None` if it does not exist."""
     try:
-        result = (
-            get_supabase_admin().table("jobs").select("*").eq("id", job_id).limit(1).execute()
-        )
+        result = get_supabase_admin().table("jobs").select("*").eq("id", job_id).limit(1).execute()
     except APIError as exc:
         raise RuntimeError(f"Failed to fetch job: {exc}") from exc
     error = getattr(result, "error", None)
