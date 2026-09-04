@@ -35,10 +35,13 @@
       "Resource": "*"
     },
     {
-      "Sid": "PassTaskExecutionRole",
+      "Sid": "PassEcsRoles",
       "Effect": "Allow",
       "Action": "iam:PassRole",
-      "Resource": "arn:aws:iam::047719657738:role/ecsTaskExecutionRole",
+      "Resource": [
+        "arn:aws:iam::047719657738:role/ecsTaskExecutionRole",
+        "arn:aws:iam::047719657738:role/recipe-kitchen-task-role"
+      ],
       "Condition": {
         "StringEquals": {
           "iam:PassedToService": "ecs-tasks.amazonaws.com"
