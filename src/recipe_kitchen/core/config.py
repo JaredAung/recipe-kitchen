@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     supabase_jwks_url: str = ""
     supabase_api_key: str = ""
     supabase_storage_bucket: str = ""
+    sqs_queue_url: str = ""
+    aws_region: str = "us-east-1"
 
     @property
     def secret_key(self) -> str:

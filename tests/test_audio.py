@@ -2,6 +2,8 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+ENQUEUE = "recipe_kitchen.api.routes.audio.enqueue_upload_job"
+
 
 def test_audio_rejects_unsupported_type(client: TestClient) -> None:
     response = client.post(
@@ -29,3 +31,19 @@ def test_audio_rejects_oversize_file(client: TestClient) -> None:
         )
     assert response.status_code == 413
     assert response.json()["detail"] == "File too large."
+
+
+def test_audio_enqueues_upload(client: TestClient) -> None:
+    with patch(ENQUEUE, return_value="job-audio") as enqueue:
+        response = client.post(
+            "/audio",
+            files={"file": ("clip.mp4", b"fake", "video/mp4")},
+        )
+
+    assert response.status_code == 202
+    assert response.json() == {"job_id": "job-audio"}
+    kind, tmp_path = enqueue.call_args.args
+    assert kind == "audio"
+    assert enqueue.call_args.kwargs["suffix"] == ".mp4"
+    assert enqueue.call_args.kwargs["original_filename"] == "clip.mp4"
+    assert not tmp_path.exists()

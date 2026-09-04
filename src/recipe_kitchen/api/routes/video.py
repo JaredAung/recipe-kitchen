@@ -1,4 +1,4 @@
-"""Run Gemini visual extract → save on an uploaded recipe video."""
+"""Enqueue Gemini visual extract on an uploaded recipe video."""
 
 from __future__ import annotations
 
@@ -6,10 +6,12 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from recipe_kitchen.api.uploads import save_upload
 from recipe_kitchen.db.add_recipe import add_recipe
+from recipe_kitchen.db.jobs import enqueue_upload_job
+from recipe_kitchen.schemas.jobs import JobAccepted
 from recipe_kitchen.schemas.recipe import Ingredient, RecipeCreate, Step
 from recipe_kitchen.services.visual_pipeline import MODEL, VIDEO_FPS, extract_visual_channel
 
@@ -57,11 +59,11 @@ def run_video_pipeline(
     )
 
 
-@router.post("", response_model=VideoPipelineResponse)
+@router.post("", response_model=JobAccepted, status_code=status.HTTP_202_ACCEPTED)
 async def extract_video(
     file: UploadFile = File(..., description="Recipe video with on-screen ingredients or steps"),
-) -> VideoPipelineResponse:
-    """Accept a recipe video upload and run the visual extraction pipeline."""
+) -> JobAccepted:
+    """Accept a recipe video upload and enqueue visual extraction."""
     suffix = Path(file.filename or "video.mp4").suffix.lower() or ".mp4"
     if suffix not in VIDEO_SUFFIXES:
         raise HTTPException(
@@ -71,15 +73,17 @@ async def extract_video(
 
     tmp_path = await save_upload(file, suffix=suffix)
     try:
-        return run_video_pipeline(tmp_path, original_filename=file.filename)
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    except ValidationError as exc:
+        job_id = enqueue_upload_job(
+            "video",
+            tmp_path,
+            suffix=suffix,
+            original_filename=file.filename,
+        )
+    except RuntimeError as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=exc.errors(),
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
         ) from exc
-    except (RuntimeError, ValueError) as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     finally:
         tmp_path.unlink(missing_ok=True)
+    return JobAccepted(job_id=job_id)

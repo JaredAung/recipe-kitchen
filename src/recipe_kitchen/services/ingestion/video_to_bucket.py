@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import urllib.request
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 from storage3.utils import StorageException
@@ -51,20 +52,17 @@ def _fetch(url: str, *, timeout: float) -> tuple[bytes, str]:
     return data, content_type
 
 
-def download_video(video_url: str, object_path: str) -> StoredVideo:
-    """GET `video_url` and upload it to the Storage bucket."""
+def _upload_bytes(path: str, data: bytes, content_type: str) -> StoredVideo:
+    """Upload `data` to `path` in the Storage bucket."""
     storage, bucket = _storage()
-    path = object_path.lstrip("/")
-    if not path:
+    object_path = path.lstrip("/")
+    if not object_path:
         raise RuntimeError("Video object path is empty.")
-
-    data, content_type = _fetch(video_url, timeout=120)
-    if content_type == "application/octet-stream":
-        content_type = "video/mp4"
-
+    if not data:
+        raise RuntimeError("Upload was empty.")
     try:
         storage.upload(
-            path,
+            object_path,
             data,
             file_options={
                 "content-type": content_type,
@@ -73,7 +71,22 @@ def download_video(video_url: str, object_path: str) -> StoredVideo:
         )
     except StorageException as exc:
         raise RuntimeError(f"Failed to upload video: {exc}") from exc
-    return StoredVideo(bucket=bucket, path=path)
+    return StoredVideo(bucket=bucket, path=object_path)
+
+
+def download_video(video_url: str, object_path: str) -> StoredVideo:
+    """GET `video_url` and upload it to the Storage bucket."""
+    data, content_type = _fetch(video_url, timeout=120)
+    if content_type == "application/octet-stream":
+        content_type = "video/mp4"
+    return _upload_bytes(object_path, data, content_type)
+
+
+def upload_local_video(video_path: Path, object_path: str) -> StoredVideo:
+    """Upload a local video file to the Storage bucket."""
+    suffix = video_path.suffix.lower()
+    content_type = "video/quicktime" if suffix == ".mov" else "video/mp4"
+    return _upload_bytes(object_path, video_path.read_bytes(), content_type)
 
 
 def fetch_stored_video(object_path: str) -> bytes:

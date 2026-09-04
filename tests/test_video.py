@@ -2,10 +2,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from recipe_kitchen.schemas.recipe import Ingredient, Step, VisualExtract
-
-EXTRACT_VISUAL = "recipe_kitchen.api.routes.video.extract_visual_channel"
-ADD_RECIPE = "recipe_kitchen.api.routes.video.add_recipe"
+ENQUEUE = "recipe_kitchen.api.routes.video.enqueue_upload_job"
 
 
 def test_video_rejects_unsupported_type(client: TestClient) -> None:
@@ -36,30 +33,17 @@ def test_video_rejects_oversize_file(client: TestClient) -> None:
     assert response.json()["detail"] == "File too large."
 
 
-def test_video_saves_visual_extract(client: TestClient) -> None:
-    extracted = VisualExtract(
-        ingredients=[
-            Ingredient(name="capsicum", amount="", evidence="Capsicum", source="visual"),
-        ],
-        steps=[
-            Step(order=1, instruction="Add capsicum", evidence="Capsicum", source="visual"),
-        ],
-        transcript_en="Capsicum",
-        usage={"total_token_count": 1},
-    )
-    with (
-        patch(EXTRACT_VISUAL, return_value=extracted) as extract_visual,
-        patch(ADD_RECIPE, return_value={"id": "abc"}) as save_recipe,
-    ):
+def test_video_enqueues_upload(client: TestClient) -> None:
+    with patch(ENQUEUE, return_value="job-video") as enqueue:
         response = client.post(
             "/video",
             files={"file": ("test6.mp4", b"fake", "video/mp4")},
         )
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body["id"] == "abc"
-    assert body["ingredients"][0]["source"] == "visual"
-    assert body["usage"]["total_token_count"] == 1
-    extract_visual.assert_called_once()
-    save_recipe.assert_called_once()
+    assert response.status_code == 202
+    assert response.json() == {"job_id": "job-video"}
+    kind, tmp_path = enqueue.call_args.args
+    assert kind == "video"
+    assert enqueue.call_args.kwargs["suffix"] == ".mp4"
+    assert enqueue.call_args.kwargs["original_filename"] == "test6.mp4"
+    assert not tmp_path.exists()
