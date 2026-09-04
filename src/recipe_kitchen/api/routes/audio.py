@@ -1,14 +1,16 @@
-"""Run extract → transcribe → collect → translate → save on an uploaded recipe video."""
+"""Enqueue STT extract on an uploaded recipe video."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile, status
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from recipe_kitchen.api.uploads import save_upload
 from recipe_kitchen.db.add_recipe import add_recipe
+from recipe_kitchen.db.jobs import enqueue_upload_job
+from recipe_kitchen.schemas.jobs import JobAccepted
 from recipe_kitchen.schemas.recipe import Ingredient, RecipeCreate, Step
 from recipe_kitchen.services.audio_pipeline import extract_audio_channel
 
@@ -50,11 +52,11 @@ def run_audio_pipeline(
     )
 
 
-@router.post("", response_model=AudioPipelineResponse)
+@router.post("", response_model=JobAccepted, status_code=status.HTTP_202_ACCEPTED)
 async def transcribe_audio(
     file: UploadFile = File(..., description="Recipe video with spoken narration"),
-) -> AudioPipelineResponse:
-    """Accept a recipe video upload and run the audio extraction pipeline."""
+) -> JobAccepted:
+    """Accept a recipe video upload and enqueue audio extraction."""
     suffix = Path(file.filename or "video.mp4").suffix.lower() or ".mp4"
     if suffix not in VIDEO_SUFFIXES:
         raise HTTPException(
@@ -64,21 +66,17 @@ async def transcribe_audio(
 
     tmp_path = await save_upload(file, suffix=suffix)
     try:
-        return run_audio_pipeline(tmp_path, original_filename=file.filename)
-    except FileNotFoundError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(exc),
-        ) from exc
-    except ValidationError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=exc.errors(),
-        ) from exc
-    except (RuntimeError, ValueError) as exc:
+        job_id = enqueue_upload_job(
+            "audio",
+            tmp_path,
+            suffix=suffix,
+            original_filename=file.filename,
+        )
+    except RuntimeError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=str(exc),
         ) from exc
     finally:
         tmp_path.unlink(missing_ok=True)
+    return JobAccepted(job_id=job_id)

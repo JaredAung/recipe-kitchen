@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
   workflow_dispatch:
 
@@ -21,6 +21,8 @@ jobs:
       SUPABASE_URL: https://example.supabase.co
       SUPABASE_PUBLISHABLE_KEY: test-publishable-key
       SUPABASE_SECRET_KEY: test-secret-key
+      SQS_QUEUE_URL: https://sqs.us-east-1.amazonaws.com/123/test
+      AWS_REGION: us-east-1
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.0.1
