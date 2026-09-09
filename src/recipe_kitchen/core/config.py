@@ -21,6 +21,12 @@ class Settings(BaseSettings):
     supabase_storage_bucket: str = ""
     sqs_queue_url: str = ""
     aws_region: str = "us-east-1"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        """Browser origins allowed by CORS, parsed from comma-separated CORS_ORIGINS."""
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @property
     def secret_key(self) -> str:

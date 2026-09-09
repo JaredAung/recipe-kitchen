@@ -2,18 +2,25 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
+from tests.conftest import TEST_USER_ID
+
 ENQUEUE = "recipe_kitchen.api.routes.recipe.enqueue_job"
 
 
-def test_recipe_rejects_empty_body(client: TestClient) -> None:
-    response = client.post("/recipe", json={})
+def test_recipe_requires_auth(client: TestClient) -> None:
+    response = client.post("/recipe", json={"caption": "Fry a whole fish"})
+    assert response.status_code == 401
+
+
+def test_recipe_rejects_empty_body(auth_client: TestClient) -> None:
+    response = auth_client.post("/recipe", json={})
     assert response.status_code == 400
     assert "caption" in response.json()["detail"]
 
 
-def test_recipe_enqueues_caption_without_video(client: TestClient) -> None:
+def test_recipe_enqueues_caption_without_video(auth_client: TestClient) -> None:
     with patch(ENQUEUE, return_value="job-1") as enqueue:
-        response = client.post("/recipe", json={"caption": "Fry a whole fish"})
+        response = auth_client.post("/recipe", json={"caption": "Fry a whole fish"})
 
     assert response.status_code == 202
     assert response.json() == {"job_id": "job-1"}
@@ -23,11 +30,12 @@ def test_recipe_enqueues_caption_without_video(client: TestClient) -> None:
     assert payload["caption"] == "Fry a whole fish"
     assert payload["video"] == ""
     assert payload["subtitle_text"] == ""
+    assert payload["user_id"] == str(TEST_USER_ID)
 
 
-def test_recipe_enqueues_storage_path(client: TestClient) -> None:
+def test_recipe_enqueues_storage_path(auth_client: TestClient) -> None:
     with patch(ENQUEUE, return_value="job-2") as enqueue:
-        response = client.post(
+        response = auth_client.post(
             "/recipe",
             json={
                 "caption": "Maggi Omlette",
@@ -46,10 +54,11 @@ def test_recipe_enqueues_storage_path(client: TestClient) -> None:
     assert payload["video"] == "123/video.mp4"
     assert payload["thumbnail"] == "123/thumbnail.jpg"
     assert payload["source_url"] == "https://www.facebook.com/reel/123"
+    assert payload["user_id"] == str(TEST_USER_ID)
 
 
-def test_recipe_returns_502_when_enqueue_fails(client: TestClient) -> None:
+def test_recipe_returns_502_when_enqueue_fails(auth_client: TestClient) -> None:
     with patch(ENQUEUE, side_effect=RuntimeError("Failed to enqueue job")):
-        response = client.post("/recipe", json={"caption": "thin caption"})
+        response = auth_client.post("/recipe", json={"caption": "thin caption"})
     assert response.status_code == 502
     assert response.json()["detail"] == "Failed to enqueue job"

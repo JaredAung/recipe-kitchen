@@ -290,6 +290,7 @@ def save_node(state: RecipeGraphState) -> dict[str, Any]:
             original_filename=state.original_filename,
             source_url=state.source_url,
             thumbnail_path=state.thumbnail_path,
+            user_id=state.user_id,
             caption_text=state.caption,
             extraction_meta={
                 "stopped_after": state.phase,

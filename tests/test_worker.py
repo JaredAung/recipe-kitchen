@@ -4,6 +4,7 @@ from recipe_kitchen.schemas.extract import RecipePipelineResult
 from recipe_kitchen.schemas.jobs import Job
 from recipe_kitchen.schemas.recipe import Ingredient, Step
 from recipe_kitchen.worker import handle_job, process_message
+from tests.conftest import TEST_USER_ID
 
 
 def _recipe_result() -> RecipePipelineResult:
@@ -40,6 +41,7 @@ def test_handle_recipe_calls_pipeline() -> None:
             "thumbnail": "123/thumbnail.jpg",
             "source_url": "https://www.facebook.com/reel/123",
             "original_filename": None,
+            "user_id": str(TEST_USER_ID),
         },
     )
     result = _recipe_result()
@@ -54,6 +56,7 @@ def test_handle_recipe_calls_pipeline() -> None:
     assert kwargs["video_storage_path"] == "123/video.mp4"
     assert kwargs["thumbnail_path"] == "123/thumbnail.jpg"
     assert kwargs["original_filename"] == "video.mp4"
+    assert kwargs["user_id"] == TEST_USER_ID
     assert kwargs["save"] is True
     finish.assert_called_once()
     assert finish.call_args.args[0] == "job-1"

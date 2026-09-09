@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from uuid import UUID
 
 from recipe_kitchen.graph.graph import recipe_graph
 from recipe_kitchen.graph.nodes import english_transcript
@@ -75,6 +76,7 @@ def run_recipe_pipeline(
     source_url: str | None = None,
     video_storage_path: str | None = None,
     thumbnail_path: str | None = None,
+    user_id: UUID | None = None,
     save: bool = True,
 ) -> RecipePipelineResult:
     """Extract from caption, then subtitles, then audio, then visual.
@@ -107,6 +109,7 @@ def run_recipe_pipeline(
                         original_filename=original_filename,
                         source_url=source_url,
                         thumbnail_path=thumbnail_path,
+                        user_id=user_id,
                     )
                 )
             )

@@ -1,5 +1,6 @@
 from functools import lru_cache
 from typing import Annotated, Any
+from uuid import UUID
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -42,3 +43,22 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired access token",
         ) from exc
+
+
+def get_current_user_id(
+    user: Annotated[dict[str, Any], Depends(get_current_user)],
+) -> UUID:
+    """Return the authenticated user's `sub` as a UUID."""
+    sub = user.get("sub")
+    if not isinstance(sub, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired access token",
+        )
+    try:
+        return UUID(sub)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired access token",
+        ) from None

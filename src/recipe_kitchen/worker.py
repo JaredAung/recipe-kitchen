@@ -8,6 +8,7 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 from recipe_kitchen.api.routes.audio import run_audio_pipeline
 from recipe_kitchen.api.routes.video import run_video_pipeline
@@ -33,6 +34,14 @@ def _optional_text(payload: Mapping[str, Any], key: str) -> str | None:
     return text or None
 
 
+def _optional_uuid(payload: Mapping[str, Any], key: str) -> UUID | None:
+    """Return a UUID field, or `None` when missing or blank."""
+    text = _optional_text(payload, key)
+    if not text:
+        return None
+    return UUID(text)
+
+
 def _handle_recipe(job: Job) -> None:
     """Run the recipe graph and store `RecipePipelineResult`."""
     payload = job.input
@@ -45,6 +54,7 @@ def _handle_recipe(job: Job) -> None:
         source_url=_optional_text(payload, "source_url"),
         video_storage_path=video or None,
         thumbnail_path=_optional_text(payload, "thumbnail"),
+        user_id=_optional_uuid(payload, "user_id"),
         save=True,
     )
     finish_job(job.id, result.model_dump(mode="json"))

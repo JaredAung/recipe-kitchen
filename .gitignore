@@ -14,7 +14,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -222,3 +222,4 @@ testing-material/
 
 cheatsheet.txt
 docs/
+.cursor/

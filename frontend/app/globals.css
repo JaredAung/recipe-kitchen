@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+:root {
+  --recipe-soapstone: #d7dcd4;
+  --recipe-cast-iron: #14181a;
+  --recipe-phone-glow: #f3f6f8;
+  --recipe-turmeric: #e3b23c;
+  --recipe-chili: #9b2d20;
+  --recipe-steam: #6f7f74;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-soapstone: var(--recipe-soapstone);
+  --color-cast-iron: var(--recipe-cast-iron);
+  --color-phone-glow: var(--recipe-phone-glow);
+  --color-turmeric: var(--recipe-turmeric);
+  --color-chili: var(--recipe-chili);
+  --color-steam: var(--recipe-steam);
+  --font-display: var(--font-barlow);
+  --font-body: var(--font-source);
+  --font-myanmar: var(--font-noto-myanmar);
+}
+
+html {
+  background: var(--recipe-soapstone);
+  color: var(--recipe-cast-iron);
+}
+
+body {
+  font-family: var(--font-source), "Source Serif 4", ui-serif, Georgia, serif;
+  background: var(--recipe-soapstone);
+  color: var(--recipe-cast-iron);
+}
+
+:focus-visible {
+  outline: 2px solid var(--recipe-turmeric);
+  outline-offset: 3px;
+}
+
+@keyframes reel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) rotate(-7deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-7deg);
+  }
+}
+
+.reel-enter {
+  animation: reel-enter 700ms ease-out both;
+  transform: rotate(-7deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reel-enter {
+    animation: none;
+    transform: rotate(-7deg);
+  }
+}
