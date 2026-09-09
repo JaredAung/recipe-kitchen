@@ -154,6 +154,9 @@ activemq-data/
 env/
 venv/
 ENV/
+# `ENV/` is matched case-insensitively and would hide frontend/lib/env/
+!frontend/lib/env/
+!frontend/lib/env/**
 env.bak/
 venv.bak/
 

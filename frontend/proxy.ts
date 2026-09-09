@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { loadRootEnv } from "@/lib/env/load-root-env";
+import { loadRootEnv } from "@/lib/utils/load-root-env";
 import { updateSession } from "@/lib/supabase/proxy";
 
 loadRootEnv();
