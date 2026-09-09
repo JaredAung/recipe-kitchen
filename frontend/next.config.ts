@@ -3,7 +3,7 @@ import path from "node:path";
 import { loadEnvConfig } from "@next/env";
 import type { NextConfig } from "next";
 
-import { loadRootEnv } from "./lib/env/load-root-env";
+import { loadRootEnv } from "./lib/utils/load-root-env";
 
 loadEnvConfig(path.resolve(process.cwd(), ".."), process.env.NODE_ENV !== "production");
 loadRootEnv();

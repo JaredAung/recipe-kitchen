@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-import { loadRootEnv } from "@/lib/env/load-root-env";
+import { loadRootEnv } from "@/lib/utils/load-root-env";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 loadRootEnv();
