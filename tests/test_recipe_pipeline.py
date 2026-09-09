@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+from uuid import UUID
 
 import pytest
 
@@ -655,6 +656,7 @@ def test_pipeline_saves_after_enrich() -> None:
             caption=caption,
             original_filename="fish.mp4",
             source_url="https://example.com/reel",
+            user_id=UUID("11111111-1111-1111-1111-111111111111"),
             save=True,
         )
 
@@ -668,6 +670,7 @@ def test_pipeline_saves_after_enrich() -> None:
     assert created.total_time_minutes == 25
     assert created.original_filename == "fish.mp4"
     assert created.source_url == "https://example.com/reel"
+    assert created.user_id == UUID("11111111-1111-1111-1111-111111111111")
     assert created.video_path is None
     assert created.extraction_meta["sufficient"] is True
 

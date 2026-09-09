@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -74,6 +75,7 @@ class RecipeGraphState(BaseModel):
     original_filename: str | None = None
     source_url: str | None = None
     thumbnail_path: str | None = None
+    user_id: UUID | None = None
     recipe_id: str = ""
 
 
