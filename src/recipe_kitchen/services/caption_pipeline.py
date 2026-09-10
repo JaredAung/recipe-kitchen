@@ -7,6 +7,7 @@ import re
 
 from recipe_kitchen.schemas.extract import CaptionExtract
 from recipe_kitchen.schemas.recipe import CollectorSource, Ingredient, Step
+from recipe_kitchen.services.collect_bilingual import collect_bilingual
 from recipe_kitchen.services.ingredient_collector import collect_ingredients
 from recipe_kitchen.services.steps_collector import collect_steps
 from recipe_kitchen.services.translater import is_burmese, translate_to_english
@@ -78,16 +79,29 @@ def _text_extract(*, raw: str, ingredients: list[Ingredient], steps: list[Step])
 def extract_caption_channel(text: str, *, source: CollectorSource) -> CaptionExtract:
     """Collect ingredients and steps from `text` and stamp them with `source`.
 
-    Empty text or a non-recipe caption returns an empty extract and does not
-    call Gemini. Collects from the original language so evidence stays verbatim.
-    Translation is deferred until `english_caption_text`.
+    Empty text or a non-recipe English caption returns an empty extract and
+    does not call Gemini. Burmese text is collected from the original and from
+    an English translation in parallel, then reconciled before the judge.
     """
     raw = text.strip()
     if not raw:
         return CaptionExtract(ingredients=[], steps=[], source_text="")
-    if not looks_like_recipe(raw):
+    burmese = is_burmese(raw)
+    if not burmese and not looks_like_recipe(raw):
         logger.info("Skipping Gemini extract; caption is not a recipe (%s chars)", len(raw))
         return _text_extract(raw=raw, ingredients=[], steps=[])
+
+    if burmese:
+        text_en = translate_to_english(raw)
+        logger.info("Burmese caption: collecting original and English in parallel")
+        ingredients, steps = collect_bilingual(raw, text_en, source=source)
+        return CaptionExtract(
+            ingredients=ingredients,
+            steps=steps,
+            source_text=raw,
+            text_my=raw,
+            text_en=text_en,
+        )
 
     ingredients = [
         Ingredient.model_validate(item) for item in collect_ingredients(raw, source=source)

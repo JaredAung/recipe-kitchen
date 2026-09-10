@@ -7,7 +7,7 @@ import { JobPoller } from "@/components/job-poller";
 import { JobStatusPanel, PasteAgainLink } from "@/components/job-status-panel";
 import { StartRecipeFromIngest } from "@/components/start-recipe-from-ingest";
 import { ApiError } from "@/lib/api/client";
-import { getJob } from "@/lib/api/jobs";
+import { getJob } from "@/lib/jobs/get-job";
 import { recipeTitle } from "@/lib/recipes";
 import type { IngestResult } from "@/lib/types/ingest";
 import type { JobStatus } from "@/lib/types/jobs";

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
 import { ApiError } from "@/lib/api/client";
 import { ingestFacebook } from "@/lib/api/ingest";
+import { getAccessToken } from "@/lib/auth/access-token";
 
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
@@ -55,10 +56,20 @@ export function usePasteReel() {
     setBusy(true);
 
     try {
+      const token = await getAccessToken();
+      if (!token) {
+        router.replace(`/login?next=${encodeURIComponent("/")}`);
+        return;
+      }
+
       const accepted = await ingestFacebook(trimmed, { signal: controller.signal });
       router.push(`/recipe/${accepted.job_id}`);
     } catch (caught) {
       if (isAbortError(caught) || controller.signal.aborted) {
+        return;
+      }
+      if (caught instanceof ApiError && (caught.status === 401 || caught.status === 403)) {
+        router.replace(`/login?next=${encodeURIComponent("/")}`);
         return;
       }
       setError(messageForError(caught));
