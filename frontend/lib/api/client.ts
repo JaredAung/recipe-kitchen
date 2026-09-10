@@ -1,11 +1,4 @@
 function apiBaseUrl(): string {
-  if (typeof window === "undefined") {
-    const url = process.env.API_URL;
-    if (!url) {
-      throw new Error("API_URL is not set");
-    }
-    return url.replace(/\/$/, "");
-  }
   return "/backend";
 }
 
