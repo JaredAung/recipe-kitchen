@@ -43,6 +43,7 @@ def test_extract_caption_channel_skips_empty_text() -> None:
     with (
         patch("recipe_kitchen.services.caption_pipeline.collect_ingredients") as collect_ing,
         patch("recipe_kitchen.services.caption_pipeline.collect_steps") as collect_steps,
+        patch("recipe_kitchen.services.caption_pipeline.collect_bilingual") as bilingual,
     ):
         extracted = extract_caption_channel("  ", source="caption")
 
@@ -50,6 +51,7 @@ def test_extract_caption_channel_skips_empty_text() -> None:
     assert extracted.steps == []
     collect_ing.assert_not_called()
     collect_steps.assert_not_called()
+    bilingual.assert_not_called()
 
 
 def test_extract_caption_channel_skips_marketing_without_gemini() -> None:
@@ -58,6 +60,7 @@ def test_extract_caption_channel_skips_marketing_without_gemini() -> None:
         patch("recipe_kitchen.services.caption_pipeline.collect_ingredients") as collect_ing,
         patch("recipe_kitchen.services.caption_pipeline.collect_steps") as collect_steps,
         patch("recipe_kitchen.services.caption_pipeline.is_burmese", return_value=False),
+        patch("recipe_kitchen.services.caption_pipeline.collect_bilingual") as bilingual,
     ):
         extracted = extract_caption_channel(caption, source="caption")
 
@@ -67,6 +70,7 @@ def test_extract_caption_channel_skips_marketing_without_gemini() -> None:
     assert extracted.text_en == caption
     collect_ing.assert_not_called()
     collect_steps.assert_not_called()
+    bilingual.assert_not_called()
 
 
 def test_extract_caption_channel_stamps_caption_source() -> None:
@@ -124,3 +128,32 @@ def test_extract_caption_channel_forwards_source() -> None:
 
     collect_ing.assert_called_once_with(RECIPE_CAPTION, source="visual")
     collect_steps.assert_called_once_with(RECIPE_CAPTION, source="visual")
+
+
+def test_extract_caption_channel_collects_burmese_in_parallel() -> None:
+    caption = "ဆီထည့်ပြီး ကြော်ပါ"
+    oil = Ingredient(name="oil", amount="1 tbsp", evidence="ဆီထည့်ပြီး", source="caption")
+    fry = Step(order=1, instruction="Fry", evidence="ကြော်ပါ", source="caption")
+    with (
+        patch(
+            "recipe_kitchen.services.caption_pipeline.collect_bilingual",
+            return_value=([oil], [fry]),
+        ) as bilingual,
+        patch("recipe_kitchen.services.caption_pipeline.collect_ingredients") as collect_ing,
+        patch("recipe_kitchen.services.caption_pipeline.collect_steps") as collect_steps,
+        patch("recipe_kitchen.services.caption_pipeline.is_burmese", return_value=True),
+        patch(
+            "recipe_kitchen.services.caption_pipeline.translate_to_english",
+            return_value="Add oil and fry",
+        ) as translate,
+    ):
+        extracted = extract_caption_channel(caption, source="caption")
+
+    translate.assert_called_once_with(caption)
+    bilingual.assert_called_once_with(caption, "Add oil and fry", source="caption")
+    collect_ing.assert_not_called()
+    collect_steps.assert_not_called()
+    assert extracted.text_my == caption
+    assert extracted.text_en == "Add oil and fry"
+    assert extracted.ingredients == [oil]
+    assert extracted.steps == [fry]

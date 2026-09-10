@@ -13,3 +13,11 @@ export function getSupabasePublicEnv() {
 
   return { url, publishableKey };
 }
+
+export function getSupabaseSecretKey() {
+  const secret = process.env.SUPABASE_SECRET_KEY?.trim();
+  if (!secret) {
+    throw new Error("SUPABASE_SECRET_KEY is missing");
+  }
+  return secret;
+}

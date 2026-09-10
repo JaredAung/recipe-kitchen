@@ -15,6 +15,17 @@ function repoRoot(start = process.cwd()) {
   }
 }
 
+const CANONICAL_KEYS = [
+  "API_URL",
+  "AWS_ACCESS_KEY_ID",
+  "AWS_REGION",
+  "AWS_SECRET_ACCESS_KEY",
+  "SQS_QUEUE_URL",
+  "SUPABASE_PUBLISHABLE_KEY",
+  "SUPABASE_SECRET_KEY",
+  "SUPABASE_URL",
+] as const;
+
 function parseEnvFile(contents: string) {
   const parsed: Record<string, string> = {};
   for (const line of contents.split("\n")) {
@@ -39,6 +50,39 @@ function parseEnvFile(contents: string) {
   return parsed;
 }
 
+function applyCanonicalNames(parsed: Record<string, string>) {
+  const byLower = new Map<string, string>();
+  for (const [key, value] of Object.entries(parsed)) {
+    byLower.set(key.toLowerCase(), value);
+  }
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value && !byLower.has(key.toLowerCase())) {
+      byLower.set(key.toLowerCase(), value);
+    }
+  }
+  const aliases: Record<string, string> = {
+    access_key_id: "AWS_ACCESS_KEY_ID",
+    secret_access_key: "AWS_SECRET_ACCESS_KEY",
+  };
+  for (const [from, to] of Object.entries(aliases)) {
+    if (!process.env[to]) {
+      const value = byLower.get(from);
+      if (value) {
+        process.env[to] = value;
+      }
+    }
+  }
+
+  for (const key of CANONICAL_KEYS) {
+    if (!process.env[key]) {
+      const value = byLower.get(key.toLowerCase());
+      if (value) {
+        process.env[key] = value;
+      }
+    }
+  }
+}
+
 export function loadRootEnv() {
   const envPath = path.join(repoRoot(), ".env");
   if (!existsSync(envPath)) {
@@ -51,6 +95,7 @@ export function loadRootEnv() {
       process.env[key] = value;
     }
   }
+  applyCanonicalNames(parsed);
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_URL) {
     process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.SUPABASE_URL;

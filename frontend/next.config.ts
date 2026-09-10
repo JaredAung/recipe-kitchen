@@ -25,11 +25,14 @@ const nextConfig: NextConfig = {
     if (!apiUrl) {
       return [];
     }
+    // Ingest, recipe, and job status are Next Route Handlers under app/backend.
     return [
-      {
-        source: "/backend/:path*",
-        destination: `${apiUrl}/:path*`,
-      },
+      { source: "/backend/audio", destination: `${apiUrl}/audio` },
+      { source: "/backend/audio/:path*", destination: `${apiUrl}/audio/:path*` },
+      { source: "/backend/video", destination: `${apiUrl}/video` },
+      { source: "/backend/video/:path*", destination: `${apiUrl}/video/:path*` },
+      { source: "/backend/health", destination: `${apiUrl}/health` },
+      { source: "/backend/me", destination: `${apiUrl}/me` },
     ];
   },
 };
