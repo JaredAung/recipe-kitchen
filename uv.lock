@@ -34,7 +34,7 @@ wheels = [
 
 [[package]]
 name = "apify-client"
-version = "3.1.3"
+version = "3.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama" },
@@ -43,9 +43,9 @@ dependencies = [
     { name = "pydantic", extra = ["email"] },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e0/d9/41fb31c20c5e860624e295e53284a9ce276b9996011a5dd1b446499b7143/apify_client-3.1.3.tar.gz", hash = "sha256:9aba0614873360563b115139ff02fc28e4a0479004a56c46f0e64c54f74f4ce1", size = 136232, upload-time = "2026-08-18T17:34:08.884Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f8/0d/9c1a453d18717546e91a4905d0f33170e5bdf52c513058457c79f37c7a68/apify_client-3.2.0.tar.gz", hash = "sha256:af770f26f26bb3d438f3974206c4242c7bb1274a264fae32027e1d1aea2d59ce", size = 142936, upload-time = "2026-09-03T07:52:24.781Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ca/1d/65096d36f30d142bb736b8457f401200b5cab9a9de6bb60124a14f2f85b1/apify_client-3.1.3-py3-none-any.whl", hash = "sha256:76f55b34c71b1eed2ba68314fd013ec4263eb4781075eabec7e24f6db2c3357f", size = 152103, upload-time = "2026-08-18T17:34:07.071Z" },
+    { url = "https://files.pythonhosted.org/packages/88/7d/6caf5a68cb12afe876ebb2fdf8627905cb80d54947c40cf7a20992f6a31b/apify_client-3.2.0-py3-none-any.whl", hash = "sha256:f516ffa55eff3e32d78af266b5ec31096ada04d1c1021f65c8d22c5359851079", size = 158677, upload-time = "2026-09-03T07:52:23.35Z" },
 ]
 
 [[package]]
@@ -659,23 +659,23 @@ wheels = [
 
 [[package]]
 name = "impit"
-version = "0.13.2"
+version = "0.14.1"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/16/6c/199de798f0d8a0d2b4f723001630eb85071f3ca8e895ceb25b305eac2eac/impit-0.13.2.tar.gz", hash = "sha256:5d71d0e2b55c9c267f99edf36e0fe6a6dff83f992f06d7abbb80095c342deeb1", size = 163512, upload-time = "2026-08-05T10:38:35.428Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/b4/00520b4c8c73530570ffea65db27e1e6bf283b484bc7b7081f35069959a3/impit-0.14.1.tar.gz", hash = "sha256:85e771493ba9ce2131dcaf3b0ec7da6da8bd8aa5f6de1d71d400c93ba17a640b", size = 169279, upload-time = "2026-09-07T13:32:51.365Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/66/90/5116c7107fbdd96a970a87c8f9cf0d70c234fba067b6149d5ec6f8da02ca/impit-0.13.2-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:6527d96a0a06ab6972809cfa03c9017837a2e7cbe271ba9ba16327b96b90fd0a", size = 4011141, upload-time = "2026-08-05T10:38:12.141Z" },
-    { url = "https://files.pythonhosted.org/packages/89/4b/12bbec53445e6a5a86dcf9ff498d4bdbe32d3b6254faec0f8f6e076c5633/impit-0.13.2-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:be59d8b7da8e18de9338845310fef4866a4e7f4de51c6fab851906b854cf035e", size = 3872815, upload-time = "2026-08-05T10:38:13.948Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/96/3b2d93667de98cbde8e91e050a68eafa5be84a4d2ecf2cd576d9a85089db/impit-0.13.2-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3adf37bef86dc3b38300003a8511937f80c46dbfde1bfb8f3f262878d250c122", size = 4233363, upload-time = "2026-08-05T10:38:15.738Z" },
-    { url = "https://files.pythonhosted.org/packages/2f/c4/2533a020bbead5c51278abbea651e58630a34d9a401ec1f8a9c8b1b9f237/impit-0.13.2-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:4ad5eb2b4b9c8e922b47d5d0ceac1096e9a380be888dc77bb832dc1874f83205", size = 4090845, upload-time = "2026-08-05T10:38:17.696Z" },
-    { url = "https://files.pythonhosted.org/packages/37/e5/2cd3baeb875bdb3defdc668050983c193a84735faaeb85313c895156f6db/impit-0.13.2-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:1bc1fd28748a03e4a9ce68fb0f3ce0bf96b5beee437124e224510539af434a7a", size = 4305906, upload-time = "2026-08-05T10:38:19.874Z" },
-    { url = "https://files.pythonhosted.org/packages/74/d7/a310b99f8ee337445d755bbe4002de9e81035b2f7a3aeffa58d5b2a54f0a/impit-0.13.2-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:e2ab7da918e0c58fdf2fa337ecd3e77aac9a7e4009dafe2c3cc8df0f7d9ef34e", size = 4460145, upload-time = "2026-08-05T10:38:21.678Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/41/37d4ae1ef69d41e8175a38588b8ba3599ff01df1b2c3e0ca576f563d83aa/impit-0.13.2-cp314-cp314-win_amd64.whl", hash = "sha256:36a58d382ad7f78cf176fff147cef02a41a4629c0245f48bc3237fe23a9b1893", size = 3921654, upload-time = "2026-08-05T10:38:23.483Z" },
-    { url = "https://files.pythonhosted.org/packages/72/d8/90f408d55d0541e46a8d94ced9edfe58d1e177d2e7732cf9e48ada1008ba/impit-0.13.2-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:c53d86bde02e776b45a1de2cbafda84c92e8224f2ba45d03627330a5ce289bd6", size = 4011066, upload-time = "2026-08-05T10:38:25.133Z" },
-    { url = "https://files.pythonhosted.org/packages/8b/9b/87e95e02cdf6c8e970155ece8053d38d9dcb98ccecb107a84f2f4d8b8554/impit-0.13.2-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:402ff84bc97f0188960bd5e1ca6cd070c14ffc835d6e6ddb90bc3978d85e6d32", size = 3872705, upload-time = "2026-08-05T10:38:26.802Z" },
-    { url = "https://files.pythonhosted.org/packages/2c/11/a51ed20241cbdade2e457ddb58e58ea1a92e69a4e36909c84c8efdff4bbb/impit-0.13.2-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:c378244f3dea168b70a03f0d9e4d4ad9ba270d64a1018094108090bc7a674e42", size = 4234172, upload-time = "2026-08-05T10:38:28.48Z" },
-    { url = "https://files.pythonhosted.org/packages/26/bd/0af84e73eb0f9cf451051003f90641f986446817abfb48838a83453d8852/impit-0.13.2-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:79cbb81d2a91ee1f9017088f428c536b9a6b405f0513701d809e6293ca62aed6", size = 4089234, upload-time = "2026-08-05T10:38:30.276Z" },
-    { url = "https://files.pythonhosted.org/packages/5d/f9/20200622e5e2c1d409b5e4fd791ead9c579c71a6203c85a7460c25f3824a/impit-0.13.2-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:468daae39f0c122a6b40ee4b6de354eccde81e4119de1be672082bc866936c50", size = 4305456, upload-time = "2026-08-05T10:38:32.151Z" },
-    { url = "https://files.pythonhosted.org/packages/37/cc/463615f964606a42ef362fc1afb8e510efcb98a6ad99afcd46b4151250ec/impit-0.13.2-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:430dd19b61bab7dbe01c0aa6d6e0296ec145424fe39e4321f87e45fa0e13187f", size = 4461102, upload-time = "2026-08-05T10:38:33.938Z" },
+    { url = "https://files.pythonhosted.org/packages/72/b9/1dc14430dc4d7ee047a8f0cec330f51abd9bb7a5a24e2c7e98148997a514/impit-0.14.1-cp314-cp314-macosx_10_12_x86_64.whl", hash = "sha256:e06aa60f2ef033ba578c4d7deafb63eea05348c54b174db1a6a239bcad4980ff", size = 5065330, upload-time = "2026-09-07T13:32:21.145Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/00/639955ff47f939fc96e7db8468366bb9227dcb931c710b45589bbe84e224/impit-0.14.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:d69e2df785a22b6104f1ed180dc08ec170f80b297d3bcc9d08bf535469d293b9", size = 4821288, upload-time = "2026-09-07T13:32:23.444Z" },
+    { url = "https://files.pythonhosted.org/packages/f1/d8/599f1729df28b8b750135ecae545b97161af27c2c753fa2ecb3c0e11aad7/impit-0.14.1-cp314-cp314-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d9afb9b03a0eafafc4402a4d0c4c433243cef97bfd0b829c8a32250e452869f8", size = 5171926, upload-time = "2026-09-07T13:32:25.715Z" },
+    { url = "https://files.pythonhosted.org/packages/56/23/08aacee6278fa75d7c2ae433b604a35b42365b8808fe24d8897a16887a21/impit-0.14.1-cp314-cp314-manylinux_2_28_aarch64.whl", hash = "sha256:062d2d70fc48f6c9d43d9504c90886d770f5aa9e550584a05a016011e5c69dae", size = 4876006, upload-time = "2026-09-07T13:32:28.381Z" },
+    { url = "https://files.pythonhosted.org/packages/43/e1/5a3da172d67af7e05e7a32c48131b4e6a213fb22a5829f6e9afe2c782cf5/impit-0.14.1-cp314-cp314-musllinux_1_2_aarch64.whl", hash = "sha256:c3c8215eaaa44322e2d16e177b165692dd512189d15d177cf5c13b31993bba4c", size = 5067035, upload-time = "2026-09-07T13:32:30.961Z" },
+    { url = "https://files.pythonhosted.org/packages/69/b3/e4a4329dc97b086e75b82872b852fc6eadc3ab6426f55dedd1ae497007da/impit-0.14.1-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:231264bb4efe2ef602c5c29c2157645e39ed8296228d5b738e7f35899e4069a0", size = 5395307, upload-time = "2026-09-07T13:32:33.286Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/73/b5adc028b0504d08a3189a0bf01af5fe6d26a5077e2470026f896dfc8b03/impit-0.14.1-cp314-cp314-win_amd64.whl", hash = "sha256:465a12029040094f0184d1ad1a86da3c9236bed65b469a260da474da859b5097", size = 4978878, upload-time = "2026-09-07T13:32:35.874Z" },
+    { url = "https://files.pythonhosted.org/packages/d3/91/175e8f5d5e2b9f3e4ef3ff684c9dab8664652b8970add464d23286454f7d/impit-0.14.1-cp314-cp314t-macosx_10_12_x86_64.whl", hash = "sha256:ba26021fdbf956f9d95c934659079f9ea30468e03dd9cc7bc901402d8e8a9604", size = 5059500, upload-time = "2026-09-07T13:32:38.178Z" },
+    { url = "https://files.pythonhosted.org/packages/a9/20/f9a6200ddd5983df396383848f9f9d40cf25c1b434df8c050dfe45a75aef/impit-0.14.1-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:2910cf6eecf24e12c12737a8f0eaa2bcc140ffc50debbee5c61354ea67ea639c", size = 4816020, upload-time = "2026-09-07T13:32:40.406Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/d3/a6f1252ff1acbd05df58f94dad16df8a2bb73aef6f74bf2b8878a00117df/impit-0.14.1-cp314-cp314t-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:35176b654271179afd0089b9cafdcffde5ca43d629214ec0c874f81a2e9cdf8b", size = 5166767, upload-time = "2026-09-07T13:32:42.647Z" },
+    { url = "https://files.pythonhosted.org/packages/41/0e/72c83b45782d961ab2b640b51da916b43f4020dec0f0e78728ff5c292477/impit-0.14.1-cp314-cp314t-manylinux_2_28_aarch64.whl", hash = "sha256:a6e577fbc99386611dc7bb7a8f33d741d142fc2932a09302e764ca537fb45b4f", size = 4871327, upload-time = "2026-09-07T13:32:44.993Z" },
+    { url = "https://files.pythonhosted.org/packages/42/53/d97338cc3ef82ca443adad7a1abd89d57b64b0354125176a95068fff6661/impit-0.14.1-cp314-cp314t-musllinux_1_2_aarch64.whl", hash = "sha256:2f9d0d5295e4affb5806c2b5b57fee073b3fc6a7013b760d4dcf468d62a10d9a", size = 5061636, upload-time = "2026-09-07T13:32:47.298Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/6d/bd2400eea1c291580bd12b0853e5662a18939dc366d45e6bd85307eccc8a/impit-0.14.1-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:ad300e9c8006702f6db762d91a767c51fc8ca93e1e4a825ae96f1b14aec13ca1", size = 5390100, upload-time = "2026-09-07T13:32:49.684Z" },
 ]
 
 [[package]]
