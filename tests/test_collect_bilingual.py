@@ -31,7 +31,5 @@ def test_collect_bilingual_reconciles_parallel_extracts() -> None:
     collect_ing_mock.assert_any_call("ဆီထည့် ကြော်ပါ", source="audio")
     collect_ing_mock.assert_any_call("Add oil and fry", source="audio")
     assert collect_steps_mock.call_count == 2
-    assert ingredients == [
-        Ingredient(name="oil", amount="1 tbsp", evidence="ဆီထည့်", source="audio")
-    ]
+    assert ingredients == [Ingredient(name="oil", amount="1 tbsp", evidence="ဆီထည့်", source="audio")]
     assert steps == [Step(order=1, instruction="Fry", evidence="ကြော်ပါ", source="audio")]
