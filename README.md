@@ -6,6 +6,8 @@ Short videos bury the dish in captions, overlays, and speech, often in Burmese. 
 
 It works for Burmese and English recipe videos.
 
+Demo Video: https://drive.google.com/file/d/1Sp8WxGZAuJ16NpX_jsfckC7EJ-rHg_F5/view?usp=sharing
+
 ## Story
 
 I send my partner cooking reels, many of them in Burmese. Apps that already turn a video into a recipe card skip Burmese. That is a reasonable product choice: Burmese is a low-resource language, and off-the-shelf OCR and speech-to-text only partly support it.
@@ -104,7 +106,7 @@ Each choice was checked on a small set of test reels. Scripts and notes live in 
 
 **Speech detection.** Scribe was running on silent reels. Silero VAD checks for speech first and skips transcription when the track is quiet. It caught speech on the test videos, including reels whose soundtrack was music. Music can still register as speech; there is no extra filter for that. The cost is a CPU PyTorch dependency and a little latency, which is cheaper than calling ElevenLabs on a reel with no narration.
 
-**Idle compute.** The first API was FastAPI on Fargate behind a load balancer: one service for ingest and job status, in containers I controlled. The tasks stayed up with no traffic, and extraction is too long to hold a request open. Next.js routes now write the job and send only the id to SQS. An ECS worker scales up when the queue has a message and back down when it is empty. Idle AWS is about $2–3 a month. FastAPI remains for local experiments. The public API is the Next.js routes.
+**Idle compute.** The first API was FastAPI on Fargate behind a load balancer: one service for ingest and job status, in containers I controlled. The tasks stayed up with no traffic, and extraction is too long to hold a request open. Next.js routes now write the job and send only the id to SQS. An ECS worker scales up when the queue has a message and back down when it is empty. It runs at most one task. Scale-out uses a five-minute CloudWatch period on the count of visible messages. That metric arrives in five-minute samples, and an empty sample counts as healthy, so a one-minute alarm never leaves OK and the job stays queued. Scale-in waits until the queue has been empty for 15 minutes. A fresh job can sit queued for a few minutes while the period closes and the task starts. Idle AWS is about $2–3 a month. FastAPI remains for local experiments. The public API is the Next.js routes.
 
 ## Local setup
 
