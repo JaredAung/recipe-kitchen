@@ -18,19 +18,7 @@ This project is the workaround. I did not train an OCR or speech model. I chaine
 
 Paste a Facebook reel URL while signed in. The app scrapes the post, then extracts a recipe from cheaper text first and spends on audio or video only when that text is still short of a method.
 
-```mermaid
-flowchart LR
-  A[Facebook reel] --> B[Ingest]
-  B --> C[Caption]
-  C --> J{Cookable?}
-  J -->|no| D[Subtitles]
-  D --> J
-  J -->|no| E[Speech]
-  E --> J
-  J -->|no| F[Visual]
-  F --> J
-  J -->|yes| G[Enrich and save]
-```
+![Recipe extraction pipeline](assets/recipe-kitchen.png)
 
 1. **Ingest.** Scrape the reel (Apify), store the video and thumbnail in Supabase Storage, and keep the caption and any subtitle track.
 2. **Caption, then subtitles.** Pull ingredients and steps from post text. Skip marketing titles; keep lines that look like a method.
@@ -71,7 +59,6 @@ flowchart TB
   SQS --> W
   W --> DB
   W --> G
-  G -->|Gemini, ElevenLabs, Silero| G
 ```
 
 - **Next.js** signs the user in with Supabase, allows three active jobs per user, inserts a `jobs` row, and puts the job id on SQS.
