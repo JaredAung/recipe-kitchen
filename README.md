@@ -116,7 +116,7 @@ cd frontend && npm run dev
 
 Open [http://localhost:3000](http://localhost:3000), sign in, and paste a Facebook reel URL.
 
-The Python API is optional for local experiments:
+The Python API is optional:
 
 ```bash
 uv run uvicorn recipe_kitchen.main:app --reload
